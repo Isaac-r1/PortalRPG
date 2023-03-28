@@ -1,29 +1,13 @@
-#from replit import db
-import enum, random, sys
 import csv
 import sqlite3
 from copy import deepcopy
 import random
 import itertools
-from random import randint, random
 from discord.ext import commands
-from discord.ext.commands import bot
-from discord.ext.commands.core import command
+
 
 class game(commands.Cog):
 
-    class GameMode(enum.IntEnum):
-        ADVENTURE = 1
-        BATTLE = 2
-        ATHOME = 3
-    
-    class Region(enum.IntEnum):
-        SWAMP = 1
-        FOREST = 2
-        TUNDRA = 3
-        MOUNTAIN = 4
-        OCEAN = 5
-    
     class inAnimated:
         def __init__(self, name, attack, defense, description):
             self.name = name
@@ -76,7 +60,7 @@ class game(commands.Cog):
     class Character(Animated):
         max_level = 20
 
-        def __init__(self, name, HP, max_HP, XP, defense, attack, gold, inventory, w, armor, accessory, ctype, battling, user_id):
+        def __init__(self, name, HP, max_HP, XP, defense, attack, gold, inventory, w, armor, accessory, ctype, battling, mode, region, level, user_id):
             super().__init__(name, HP, max_HP, XP, defense, attack, gold)
             self.inventory = inventory #player inventory, storage (on the character)
             self.w = w #weapon slot 1
@@ -84,7 +68,53 @@ class game(commands.Cog):
             self.accessory = accessory
             self.ctype = ctype #character type
             self.battling = battling #character battling
+            self.mode = mode #gamemode
+            self.region = region #biome
+            self.level = level #level
             self.user_id = user_id #user id
+
+        def changeMode(new_mode, user_id):
+            conn = sqlite3.connect('characters.db')
+            c = conn.cursor()
+            c.execute("UPDATE characters SET mode=? WHERE user_id=?", (new_mode, user_id))
+            conn.commit()
+
+        def changeRegion(new_region, user_id):
+            conn = sqlite3.connect('characters.db')
+            c = conn.cursor()
+            c.execute("UPDATE characters SET region=? WHERE user_id=?", (new_region, user_id))
+            conn.commit()
+
+        def getMode(user_id):
+            conn = sqlite3.connect('characters.db')
+            c = conn.cursor()
+            c.execute("SELECT mode FROM characters WHERE user_id=?", (user_id,))
+            mode = c.fetchone()
+            if mode is not None:
+                return mode[0]
+            else:
+                return None
+        
+        def getRegion(user_id):
+            conn = sqlite3.connect('characters.db')
+            c = conn.cursor()
+            c.execute("SELECT region FROM characters WHERE user_id=?", (user_id,))
+            region = c.fetchone()
+            if region is not None:
+                return region[0]
+            else:
+                return None
+        
+        def getLevel(user_id):
+            conn = sqlite3.connect('characters.db')
+            c = conn.cursor()
+            c.execute("SELECT level FROM characters WHERE user_id=?", (user_id,))
+            level = c.fetchone()
+            if level is not None:
+                return level[0]
+            else:
+                return None
+            
         
         #def save_to_db(self):
 
@@ -94,7 +124,22 @@ class game(commands.Cog):
             self.damage = damage #base damage of every creature
             self.biome = biome #what biome is this creature from
             #self.rarity = rarity #range from N/A, greater, advanced
-           
+
+        def spawnCreature(pbiome, level):
+            conn = sqlite3.connect('creatures.db')
+            c = conn.cursor()
+            if level < 3:
+                c.execute("SELECT * FROM Creatures WHERE diff<3 AND biome=?", (pbiome,))
+            elif level < 5:
+                c.execute("SELECT * FROM Creatures WHERE diff<4 AND biome=?", (pbiome,))
+            elif level < 8:
+                c.execute("SELECT * FROM Creatures WHERE diff<5 AND biome=?", (pbiome,))
+            else:
+                c.execute("SELECT * FROM Creatures WHERE diff<=5 AND biome=?", (pbiome,))
+            results = c.fetchall()
+            if not results:
+                return None
+            return random.choice(results)
 
 def setup(bot):
     bot.add_cog(game())

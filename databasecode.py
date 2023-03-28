@@ -64,15 +64,17 @@ class databasecode(commands.Cog):
                 max_HP integer,
                 XP integer,
                 defense integer,
+                damage integer,
                 attack integer,
                 gold integer,
-                Biome text
+                Biome text,
+                diff integer
             )''')
 
         with open('Creatures.csv', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             next(reader) # skip header row
             for row in reader:
-                c.execute("INSERT INTO Creatures (name, HP, max_HP, XP, attack, defense, gold, Biome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
+                c.execute("INSERT INTO Creatures (name, HP, max_HP, XP, defense, damage, attack, gold, Biome, diff) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
 def setup(bot):
     bot.add_cog(databasecode())
