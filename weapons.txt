@@ -1,0 +1,28 @@
+name,rarity,damage,att,def,class,des
+"Stone Sword","C",30,1,3,"S","A basic stone sword, crafted from boulders in the nearby mountains.",1
+"Long Sword","C", 50,1,4,"S","Provides greater range and protection as a long iron blade provides intimidation",2
+"Battle Axe","UC",60,1,1,"S","This axe is loyal to its owner, and will return once thrown",3
+"Horned Slasher",UC,80,1,4,"S","This sword is crafted from the horned beasts of the mountains",4
+"Golden Spear","R",140,3,-5,"S","Unlike most swords, the spear provides immense damage if hit right, but leads to vulnerability",5
+"Excalibur","R",100,2,7,"S","A sword fitted for true royalty",6
+"Dynastic Shield",L",20,3,80,"S","These shield were created in ancient times, but were lost",7
+"Volcan","L",180,2,4,"S","Forged from obsidian beneath an active volcano, this sword is said contain flames within",8
+"Sword of the Mines","L",160,1,8,"S","Forged from the deepest caves, this sword is embedded with sharp gems adding to its potent",9
+"Wooden Bow","C",40,2,2,"A","A bow crafted from sheep wool and oak logs",10
+"Hunter's Bow","C",60,1,2,"A","This bow belongs to the fabled hunters of the nearby kingdom",11
+"Permafrost","UC",90,3,4,"A","Arrows forged from unmeltable ice from the polar caps",12
+"Mangrove's Soul","UC",110,1,2,"A","This bow was etched from the ancient mangrove swamps",13
+"Bow of the trench","R",120,3,4,"A","A common wooden bow infused with the essence of the ocean",14
+"Starry Night","R",130,1,1,"A","Said to belong to an advanced alien civilization, found near impact craters around the world",15
+"Poisoned Dart","L",160,5,6,"A","A strange pipe that carrys the most deadly poisons",16
+"Wind Caller","L",170,4,4,"A","This bow summons powerful winds that extend the power of its arrows",17
+"Silhouette","L",180,2,1,"A","After tampering with magic, this bow is embedded with dark magic",18
+"Twig of Wisdom","C",20,3,1,"M","A small staff made from a simple twig, but imbued with the power of wisdom.",19
+"Thunderbolt","C",40,2,3,"M","A powerful staff that can summon bolts of lightning from the sky.",20
+"Seer's Staff","UC",60,1,6,"M","A staff that allows its wielder to see into the future and glimpse events yet to come.",21
+"Staff of Shadows","UC",80,2,4,"M","A mysterious staff that can conjure darkness and conceal its user in shadow.",22
+"Sunfire","R",120,3,2,"M","A staff that harnesses the power of the sun to unleash searing rays of heat and light.",23
+"Frostbite","R",100,2,4,"M","A staff that channels the power of ice and cold to freeze enemies in their tracks.",24
+"Elemental Staff","L",150,4,4,"M","A staff that can tap into the raw power of the elements - fire, water, air, and earth.",25
+"Staff of Life","L",180,5,5,"M","A staff that can heal even the gravest of wounds and restore life to the dead.",26
+"Eye of the Beholder","L",200,3,7,"M","A staff that can charm and control the minds of those who gaze upon it.",27

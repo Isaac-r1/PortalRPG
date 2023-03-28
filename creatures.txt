@@ -1,0 +1,21 @@
+Name,HP,Max HP,XP,Defense,Attack,Gold,Biome
+🦇 Vampire Bat,50,50,10,5,0,2,swamp
+🐸 Goliath Frog,100,100,50,10,0,5,swamp
+🐗 Warthog,200,200,100,25,0,8,swamp
+🐍 Anaconda,500,500,150,35,0,13,swamp
+🐊 Crocodile,1000,1000,200,40,0,21,swamp
+🦡 Badger,50,50,10,5,0,2,mountain
+🐐 Goat,100,100,50,10,0,5,mountain
+🦅 Eagle,200,200,100,25,0,8,mountain
+🪨 Rock Slime,500,500,150,35,0,13,mountain
+🐉 Mountain Dragon,1000,1000,200,40,0,21,mountain
+🐟 Cod,50,50,10,5,0,2,ocean
+🦀 Giant Crab,100,100,50,10,0,5,ocean
+🐡 Pufferfish,200,200,100,25,0,8,ocean
+🦈 Shark,500,500,150,35,0,13,ocean
+🐳 Whale,1000,1000,200,40,0,21,ocean
+🦆 Mallard,50,50,10,5,0,2,forest
+🦌 Deer,100,100,50,10,0,5,forest
+🦉 Owl,200,200,100,25,0,8,forest
+🐝 Swarm,500,500,150,35,0,13,forest
+🦄 Unicorn,1000,1000,200,40,0,21,forest
