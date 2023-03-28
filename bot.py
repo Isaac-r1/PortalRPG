@@ -135,4 +135,4 @@ bot.load_extension("game")
 bot.load_extension("databasecode")
 
 
-bot.run("MTA4OTQxMzU0MTAxNjExMzIzMw.G_dY83.5jMaIRRLoD4gtXKyFG2IqI8fNJa_zsoIgj0ARU")
+bot.run("MTA4OTQxMzU0MTAxNjExMzIzMw.GKNLlQ.uqTAK8UIcMatZ6IkofZwDzwZQhgBONFUicdcmY")
