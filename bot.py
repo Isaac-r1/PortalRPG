@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord
 import sqlite3
 import csv
+from config import TOKEN
 from game import game
 from databasecode import databasecode
 
@@ -135,4 +136,4 @@ bot.load_extension("game")
 bot.load_extension("databasecode")
 
 
-bot.run("MTA4OTQxMzU0MTAxNjExMzIzMw.GKNLlQ.uqTAK8UIcMatZ6IkofZwDzwZQhgBONFUicdcmY")
+bot.run(TOKEN)
