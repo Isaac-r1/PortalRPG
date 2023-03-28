@@ -106,6 +106,9 @@ async def hunt(ctx):
         embed.add_field(name="Gold", value=creature[7], inline=True)
         await ctx.send(embed=embed)
 
+    await ctx.send("Do you wish to battle your encounter?")
+    
+
 @bot.command(name = "create")
 async def create(ctx, chtype: str, name: str):
     user_id = ctx.message.author.id
