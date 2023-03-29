@@ -2,6 +2,7 @@ import csv
 import sqlite3
 from copy import deepcopy
 import random
+from random import randint
 import itertools
 from discord.ext import commands
 
@@ -23,6 +24,26 @@ class game(commands.Cog):
             self.damage = damage
             self.ctype = ctype
             self.WID = WID
+
+        def get_weapon_damage(WID):
+            with sqlite3.connect('weapons.db') as conn:
+                c = conn.cursor()
+                c.execute('SELECT damage FROM weapons WHERE WID = ?', (WID,))
+                result = c.fetchone()
+                if result:
+                    return result[0]
+                else:
+                    return "Unknown Weapon"
+                
+        def get_weapon_name(WID):
+            with sqlite3.connect('weapons.db') as conn:
+                c = conn.cursor()
+                c.execute('SELECT name FROM weapons WHERE WID = ?', (WID,))
+                result = c.fetchone()
+                if result:
+                    return result[0]
+                else:
+                    return "Unknown Weapon"
     
     class Animated:
         def __init__(self, name, HP, max_HP, XP, defense, attack, gold):
@@ -84,6 +105,16 @@ class game(commands.Cog):
             c = conn.cursor()
             c.execute("UPDATE characters SET region=? WHERE user_id=?", (new_region, user_id))
             conn.commit()
+        
+        def getMaxHP(user_id):
+            conn = sqlite3.connect('characters.db')
+            c = conn.cursor()
+            c.execute("SELECT max_HP FROM characters WHERE user_id=?", (user_id,))
+            max_HP = c.fetchone()
+            if max_HP is not None:
+                return max_HP[0]
+            else:
+                return None
 
         def getMode(user_id):
             conn = sqlite3.connect('characters.db')
@@ -140,6 +171,28 @@ class game(commands.Cog):
             if not results:
                 return None
             return random.choice(results)
+
+        def creature_damage(name):
+            with sqlite3.connect('creatures.db') as conn:
+                c = conn.cursor()
+                c.execute('SELECT damage FROM creatures WHERE name = ?', (name,))
+                result = c.fetchone()
+                if result:
+                    return result[0]
+                else:
+                    return "Unknown animal"
+        
+        def getMaxHP(name):
+            conn = sqlite3.connect('creatures.db')
+            c = conn.cursor()
+            c.execute("SELECT max_HP FROM characters WHERE user_id=?", (name,))
+            max_HP = c.fetchone()
+            if max_HP is not None:
+                return max_HP[0]
+            else:
+                return None
+
+
 
 def setup(bot):
     bot.add_cog(game())

@@ -6,6 +6,7 @@ from config import TOKEN
 import random
 from game import game
 from databasecode import databasecode
+from Battle import Battle
 
 bot = commands.Bot(command_prefix = "!")
 
@@ -62,12 +63,30 @@ async def mode(ctx, new_mode: str):
         await ctx.send("invalid mode")
         raise commands.CommandError("invalid mode!")
     
+    if(new_mode == "ATHOME"):
+        game.Character.changeRegion("None", user_id)
+    
     if game.Character.getMode(user_id) == new_mode:
         await ctx.send("You're already in this state!")
         raise commands.CommandError("Invalid mode!")
     
     game.Character.changeMode(new_mode, user_id)
     await ctx.send("Mode changed to " + new_mode + "!")
+
+@bot.command(name = "delete_user")
+@commands.is_owner()
+async def delete_user(ctx, member: discord.Member):
+    with sqlite3.connect('characters.db') as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM characters WHERE user_id=?", (member.id,))
+    with sqlite3.connect('player_weapons.db') as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM player_weapons WHERE user_id=?", (member.id,))
+    await ctx.send(f"User with ID {member.id} has been deleted from the database.")
+
+@bot.command(name = "uid")
+async def uid(ctx, member: discord.Member):
+    await ctx.send(member.id)
 
 @bot.command(name = "region")
 async def region(ctx, new_region: str):
@@ -77,7 +96,7 @@ async def region(ctx, new_region: str):
         await ctx.send("Change your mode to ADVENTURE!")
         raise commands.CommandError("Invalid mode")
 
-    if new_region not in ["tundra", "ocean", "forest", "swamp", "mountains"]:
+    if new_region not in ["tundra", "ocean", "forest", "swamp", "mountain"]:
         await ctx.send("invalid region")
         raise commands.CommandError("invalid region!")
 
@@ -91,6 +110,10 @@ async def hunt(ctx):
     if game.Character.getMode(user_id) != "ADVENTURE":
         await ctx.send("Change your mode to ADVENTURE to hunt!")
         raise commands.CommandError("Invalid mode")
+    
+    if game.Character.getRegion(user_id) == "None":
+        await ctx.send("Enter a region!")
+        raise commands.CommandError("Invalid region")
 
     region = game.Character.getRegion(user_id)
     level = game.Character.getLevel(user_id)
@@ -106,18 +129,28 @@ async def hunt(ctx):
         embed.add_field(name="Gold", value=creature[7], inline=True)
         await ctx.send(embed=embed)
 
-    await ctx.send("Do you wish to battle your encounter?")
+    await ctx.send("Do you wish to battle your encounter? Type Y/N")
+
+    def check(message):
+        return message.author == ctx.author and message.channel == ctx.channel
     
+    msg = await bot.wait_for("message", check=check)
+    if(msg.content.lower() == "y"):
+        await Battle.fight(ctx, user_id, creature)
+    else:
+        await ctx.send("You fled the encounter!")
 
 @bot.command(name = "create")
 async def create(ctx, chtype: str, name: str):
     user_id = ctx.message.author.id
     
-    
     if not (chtype == "mage" or chtype == "archer" or chtype == "swordsman"):
         await ctx.send("please pick one of the three following classes: mage, archer, swordsman then provide a name!")
         raise commands.CommandError("Not a valid class!")
     
+    if len(name) >= 30:
+        await ctx.send("Your name is too long!")
+        raise commands.CommandError("Not a valid name!")
     
 
     cursor.execute('SELECT * FROM characters WHERE id = ?', (user_id,))
@@ -129,6 +162,7 @@ async def create(ctx, chtype: str, name: str):
         conn.commit()
         await ctx.send("Your character, " + name + ",has been created, type: " + chtype)
     else:
+        await ctx.send("You already own an account!")
         raise commands.CommandError("You already own an account!")
 
 @bot.command(name = "status")
@@ -145,7 +179,7 @@ async def status(ctx):
         embed.add_field(name="Attack", value=row[6], inline=True)
         embed.add_field(name="Gold", value=row[7], inline=True)
         embed.add_field(name="Inventory", value=row[8], inline=False)
-        embed.add_field(name="Weapon Slots", value=get_weapon_name(row[9]), inline=True)
+        embed.add_field(name="Weapon Slots", value= game.weapon.get_weapon_name(row[9]), inline=True)
         embed.add_field(name="Armor", value=row[10], inline=True)
         embed.add_field(name="Accessory", value=row[11], inline=True)
         embed.add_field(name="Class", value=row[12], inline=True)
@@ -156,17 +190,6 @@ async def status(ctx):
     else:
         await ctx.send("You don't have a character yet. Use `!create` to create one.")
 
-
-def get_weapon_name(WID):
-    with sqlite3.connect('weapons.db') as conn:
-        c = conn.cursor()
-        print("Executing query with WID:", WID)
-        c.execute('SELECT name FROM weapons WHERE WID = ?', (WID,))
-        result = c.fetchone()
-        if result:
-            return result[0]
-        else:
-            return "Unknown Weapon"
 
 @bot.command(name="weaponInfo")
 async def weaponInfo(ctx, WID: int):
@@ -193,6 +216,7 @@ async def weaponInfo(ctx, WID: int):
 
 bot.load_extension("game")
 bot.load_extension("databasecode")
+bot.load_extension("Battle")
 
 
 bot.run(TOKEN)
