@@ -29,7 +29,7 @@ class databasecode(commands.Cog):
                     description text,
                     WID INTEGER PRIMARY KEY AUTOINCREMENT)''')
 
-        with open('Book1.csv', newline='') as csvfile:
+        with open('CSV & TXT Files/Book1.csv', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             next(reader) # skip header row
             for row in reader:
@@ -71,7 +71,7 @@ class databasecode(commands.Cog):
                 diff integer
             )''')
 
-        with open('Creatures.csv', newline='', encoding='utf-8') as csvfile:
+        with open('CSV & TXT Files/Creatures.csv', newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             next(reader) # skip header row
             for row in reader:

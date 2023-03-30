@@ -2,11 +2,13 @@ from discord.ext import commands
 import discord
 import sqlite3
 import csv
-from config import TOKEN
+import sys
+sys.path.append("C:\\Users\\gamin\\PortalRPG")
+from PythonFiles.config import TOKEN
 import random
-from game import game
-from databasecode import databasecode
-from Battle import Battle
+from PythonFiles.game import game
+from PythonFiles.databasecode import databasecode
+from PythonFiles.Battle import Battle
 
 bot = commands.Bot(command_prefix = "!")
 
@@ -22,7 +24,7 @@ if not table_exists:
         id INTEGER,
         name TEXT,
         HP INTEGER,
-        max_HP INTEGER,
+        max_HP INTEGER, 
         XP INTEGER,
         defense INTEGER,
         attack INTEGER,

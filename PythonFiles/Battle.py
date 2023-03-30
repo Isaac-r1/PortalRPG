@@ -3,8 +3,8 @@ import discord
 import sqlite3
 import csv
 import random
-from game import game
-from databasecode import databasecode 
+from PythonFiles.game import game
+from PythonFiles.databasecode import databasecode 
 
 class Battle(commands.Cog):
     async def fight(ctx, user_id, creature):
@@ -32,8 +32,11 @@ class Battle(commands.Cog):
             if(msg.content.lower() == "a"):
                 ehp = creature[1]
 
-                damage = game.weapon.get_weapon_damage(player[9])
+                scaler = random.randint(10, 15)/random.randint(10, 15)
+
+                damage = game.weapon.get_weapon_damage(player[9])  * scaler
                 ehp -= damage
+                ehp = int(round(ehp))
 
                 cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (ehp, creature[0]))
                 conn1.commit()
@@ -43,10 +46,13 @@ class Battle(commands.Cog):
                 creature = cursor1.fetchone()
 
                 await ctx.send("You attacked the enemy")
-                php = player[2] 
-                cdmg = game.CCreature.creature_damage(creature[0])
+                php = player[2]
 
+                scaler = random.randint(10, 15)/random.randint(10, 15)
+                
+                cdmg = game.CCreature.creature_damage(creature[0])*scaler
                 php -= cdmg
+                php = int(round(php))
 
                 cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (php, user_id))
                 conn.commit()
