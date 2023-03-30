@@ -38,12 +38,18 @@ class Battle(commands.Cog):
                 ehp -= damage
                 ehp = int(round(ehp))
 
+                if(ehp < 0):
+                    ehp = 0
+
                 cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (ehp, creature[0]))
                 conn1.commit()
 
                 # Fetch updated creature values from the database
                 cursor1.execute('SELECT * FROM creatures WHERE name = ?', (creature[0],))
                 creature = cursor1.fetchone()
+
+                if(ehp <= 0):
+                    break
 
                 await ctx.send("You attacked the enemy")
                 php = player[2]
@@ -54,12 +60,18 @@ class Battle(commands.Cog):
                 php -= cdmg
                 php = int(round(php))
 
+                if(php < 0):
+                    php = 0
+
                 cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (php, user_id))
                 conn.commit()
 
                 # Fetch updated player values from the database
                 cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
                 player = cursor.fetchone()
+
+                if(php <= 0):
+                    break
 
                 embed = Battle.fight_status(player, creature)
                 await ctx.send(embed = embed)
@@ -69,11 +81,16 @@ class Battle(commands.Cog):
                 break
             else:
                 await ctx.send("Invalid!")
-
-        if(player[2] < 0):
+        
+        embed = Battle.fight_status(player, creature)
+        await ctx.send(embed = embed)
+            
+        if(player[2] == 0):
             await ctx.send("You died!")
-        if(creature[1] < 0):
+        if(creature[1] == 0):
             await ctx.send("You win!")
+
+
 
         cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
         conn.commit()

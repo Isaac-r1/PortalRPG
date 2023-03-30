@@ -3,6 +3,8 @@ import discord
 import sqlite3
 import csv
 import sys
+import subprocess
+import time
 sys.path.append("C:\\Users\\gamin\\PortalRPG")
 from PythonFiles.config import TOKEN
 import random
@@ -113,7 +115,7 @@ async def region(ctx, new_region: str):
     await ctx.send("Region changed to " + new_region.lower() + "!")
 
 @bot.command(name = "hunt")
-@commands.cooldown(1, 10, commands.BucketType.user)
+@commands.cooldown(1, 3, commands.BucketType.user)
 
 async def hunt(ctx):
     user_id = ctx.message.author.id
