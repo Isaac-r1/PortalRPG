@@ -116,26 +116,46 @@ class databasecode(commands.Cog):
             for row in reader:
                 c.execute("INSERT INTO Creatures (name, HP, max_HP, XP, defense, damage, attack, gold, Biome, diff) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
 
-with sqlite3.connect('items.db') as conn:
-        c = conn.cursor()
-        c.execute("SELECT name from sqlite_master WHERE type='table' AND name = 'items'")
-        if c.fetchone() is None:
-            c.execute('''CREATE TABLE items(
-                item_id INTEGER PRIMARY KEY,
-                name TEXT,
-                type TEXT,
-                rarity TEXT,
-                damage INTEGER,
-                attack INTEGER,
-                defense INTEGER,
-                description TEXT,
-                ctype TEXT
-            )''')
+# create a new database to hold the merged data
+with sqlite3.connect('merged.db') as conn:
+    c = conn.cursor()
 
+    c.execute("SELECT name from sqlite_master WHERE type='table' AND name = 'items'")
+    if c.fetchone() is None:
+    # create the items table with an auto-incrementing primary key
+        c.execute('''CREATE TABLE items(
+            item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            type TEXT,
+            rarity TEXT,
+            damage INTEGER,
+            attack INTEGER,
+            defense INTEGER,
+            description TEXT,
+            ctype TEXT
+        )''')
 
+    # attach the original databases
+    c.execute("ATTACH 'weapons.db' AS weapons")
+    c.execute("ATTACH 'armor.db' AS armor")
+    c.execute("ATTACH 'accessories.db' AS accessories")
 
-        
+    # insert data from the original databases into the items table,
+    # using unique auto-incrementing item_id values
+    c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
+        SELECT name, 'weapon', rarity, damage, attack, defense, description, ctype
+        FROM weapons.weapons''')
 
+    c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
+        SELECT name, 'armor', rarity, 0, attack, defense, description, ctype
+        FROM armor.armor''')
+
+    c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
+        SELECT name, 'accessory', rarity, 0, attack, defense, description, ''
+        FROM accessories.accessories''')
+
+    # commit the changes
+    conn.commit()
 
 def setup(bot):
     bot.add_cog(databasecode())
