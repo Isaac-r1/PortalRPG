@@ -1,0 +1,24 @@
+name,rarity,attack,defense,ctype,description
+Plate Armor,C,2,10,s,Basic warrior armor
+Barnacle Armor,UC,3,13,s,"Plate armor left abandoned in the seas, the barnacles that've grown seems to provide further protection"
+Carbon Fiber,UC,2,15,s,High tech armor that's both mobile and tanky
+Thorned-Mail,R,10,5,s,"Although not very protective, the thorns provide a great attack boost"
+Samurai Armor,R,5,18,s,This armor has been enchanted for some of the most powerful warriors
+Armor of the Golden Light,L,4,23,s,"Said to belong to the crusaders, forged within the greatest mountains"
+Dragon Scale Armor,L,3,28,s,A rare and powerful armor made from the scales of a dragon. It provides excellent defense against fire attacks.
+Leather Armor,C,2,5,a,Basic armor made of leather
+Ranger Vest,C,3,3,a,Light and flexible armor used by rangers
+Ancient Hide,UC,4,5,a,Specialized armor designed during prehistoric times
+Storm Armor,UC,4,7,a,Armor designed to withstand harsh weather conditions
+Armor of the Black Arrow,R,5,10,a,Armor worn by the elite archers of the Black Arrow guild
+Silent Hide,R,6,15,a,Armor designed to make the wearer move silently and swiftly
+Vest of the Depths,L,4,20,a,"Armor made from the depepest caves, providing excellent protection against physical attacks"
+The Archer's Eye,L,7,18,a,Armor said to enhance the wearer's accuracy and perception
+Arcane Robes,C,5,2,m,Simple robes imbued with arcane energy
+Elemental Vestments,C,5,3,m,Robes that harness the power of the elements for defense
+Dark Shroud,UC,6,8,m,Dark robes that conceal the wearer in shadows and provide protection
+Runed Robes,UC,6,10,m,Robes inscribed with powerful runes for protection and spellcasting
+Crystaline Robes,R,7,15,m,Robes made of enchanted crystals that amplify magical abilities
+Enchanted Silk Robes,R,7,14,m,Robes made of enchanted silk that enhance spellcasting abilities
+Armor of the Archmage,L,6,18,m,Legendary armor said to have been worn by the greatest mage of all time
+Voidweave Robes,L,9,15,m,Robes made of a rare and powerful material that can bend the fabric of reality

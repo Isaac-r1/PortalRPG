@@ -12,6 +12,45 @@ from discord.ext.commands.core import command
 
 
 class databasecode(commands.Cog):
+    with sqlite3.connect('armor.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='armor'")
+
+        if c.fetchone() is None:
+            c.execute('''CREATE TABLE armor
+                    (name text, 
+                    rarity text, 
+                    attack integer, 
+                    defense integer, 
+                    ctype text, 
+                    description text,
+                    AID INTEGER PRIMARY KEY AUTOINCREMENT)''')
+
+        with open('CSV & TXT Files/Armor.csv', newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            next(reader) # skip header row
+            for row in reader:
+                c.execute("INSERT INTO armor (name, rarity, attack, defense, ctype, description) VALUES (?, ?, ?, ?, ?, ?)", (*row,))
+
+    with sqlite3.connect('accessories.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='accessories'")
+
+        if c.fetchone() is None:
+            c.execute('''CREATE TABLE accessories
+                    (name text, 
+                    rarity text, 
+                    attack integer, 
+                    defense integer, 
+                    description text,
+                    ACID INTEGER PRIMARY KEY AUTOINCREMENT)''')
+
+        with open('CSV & TXT Files/Accessories.csv', newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            next(reader) # skip header row
+            for row in reader:
+                c.execute("INSERT INTO accessories (name, rarity, attack, defense, description) VALUES (?, ?, ?, ?, ?)", (*row,))
+
     with sqlite3.connect('weapons.db') as conn:
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='weapons'")
@@ -21,7 +60,7 @@ class databasecode(commands.Cog):
         if not table_exists:
             c.execute('''CREATE TABLE weapons
                     (name text, 
-                    rarity text, 
+                    rarity text,
                     damage integer, 
                     attack integer, 
                     defense integer, 
@@ -76,5 +115,27 @@ class databasecode(commands.Cog):
             next(reader) # skip header row
             for row in reader:
                 c.execute("INSERT INTO Creatures (name, HP, max_HP, XP, defense, damage, attack, gold, Biome, diff) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
+
+with sqlite3.connect('items.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT name from sqlite_master WHERE type='table' AND name = 'items'")
+        if c.fetchone() is None:
+            c.execute('''CREATE TABLE items(
+                item_id INTEGER PRIMARY KEY,
+                name TEXT,
+                type TEXT,
+                rarity TEXT,
+                damage INTEGER,
+                attack INTEGER,
+                defense INTEGER,
+                description TEXT,
+                ctype TEXT
+            )''')
+
+
+
+        
+
+
 def setup(bot):
     bot.add_cog(databasecode())

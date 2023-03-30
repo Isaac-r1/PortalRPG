@@ -1,0 +1,8 @@
+name,rarity,attack,defense,description
+Loop of Iron,C,1,1,"A common iron ring"
+Diamond Pendant,UC,2,2,"A sparkling pendant adorned with diamonds, provides a modest boost in attack and defense"
+Amulet of the Magus,UC,4,0,"An enchanted amulet that enhances magical abilities, but provides no physical protection"
+Feathered Earrings,R,4,2,"Earrings made from the feathers of rare birds, enhances agility and dexterity"
+Medallion of the Ancient Hero,R,5,8,"A medallion that once belonged to a legendary hero, provides a significant boost in both attack and defense"
+Charm of the Shadow,L,10,2,"A dark charm that imbues the wearer with shadow magic, granting powerful offensive abilities"
+Ring of the Guardian,L,6,20,"A ring infused with protective magic, providing unmatched defense to the wearer"
