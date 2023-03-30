@@ -10,7 +10,14 @@ from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode
 from PythonFiles.Battle import Battle
 
-bot = commands.Bot(command_prefix = "!")
+intents = discord.Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix='!', case_insensitive=True, 
+                   help_command=commands.DefaultHelpCommand(dm_help=True), 
+                   intents=intents)
+bot.case_insensitive = True
+bot.command_prefix = ['!']
 
 databasecode.create_player_weapons_table()
 
@@ -61,7 +68,7 @@ def Wchoice(chtype, user_id):
 @bot.command(name = "mode")
 async def mode(ctx, new_mode: str):
     user_id = ctx.message.author.id
-    if not (new_mode == "ADVENTURE" or new_mode == "ATHOME"):
+    if not (new_mode.lower() == "adventure" or new_mode.lower() == "athome"):
         await ctx.send("invalid mode")
         raise commands.CommandError("invalid mode!")
     
@@ -72,8 +79,8 @@ async def mode(ctx, new_mode: str):
         await ctx.send("You're already in this state!")
         raise commands.CommandError("Invalid mode!")
     
-    game.Character.changeMode(new_mode, user_id)
-    await ctx.send("Mode changed to " + new_mode + "!")
+    game.Character.changeMode(new_mode.upper(), user_id)
+    await ctx.send("Mode changed to " + new_mode.upper() + "!")
 
 @bot.command(name = "delete_user")
 @commands.is_owner()
@@ -98,20 +105,22 @@ async def region(ctx, new_region: str):
         await ctx.send("Change your mode to ADVENTURE!")
         raise commands.CommandError("Invalid mode")
 
-    if new_region not in ["tundra", "ocean", "forest", "swamp", "mountain"]:
+    if new_region.lower() not in ["tundra", "ocean", "forest", "swamp", "mountain"]:
         await ctx.send("invalid region")
         raise commands.CommandError("invalid region!")
 
-    game.Character.changeRegion(new_region, user_id)  
-    await ctx.send("Region changed to " + new_region + "!")
+    game.Character.changeRegion(new_region.lower(), user_id)  
+    await ctx.send("Region changed to " + new_region.lower() + "!")
 
 @bot.command(name = "hunt")
+@commands.cooldown(1, 10, commands.BucketType.user)
+
 async def hunt(ctx):
     user_id = ctx.message.author.id
 
-    if game.Character.getMode(user_id) != "ADVENTURE":
-        await ctx.send("Change your mode to ADVENTURE to hunt!")
-        raise commands.CommandError("Invalid mode")
+    if game.Character.getMode(user_id).lower() != "adventure":
+        await ctx.send("Change your mode to **adventure** to hunt!")
+        raise commands.CommandError("**Invalid mode**")
     
     if game.Character.getRegion(user_id) == "None":
         await ctx.send("Enter a region!")
@@ -215,6 +224,14 @@ async def weaponInfo(ctx, WID: int):
         print(e)
         await ctx.send("An error occurred while retrieving weapon information.")
 
+@bot.command(name="restart")
+async def restart(ctx):
+    adminstrator_users=["851122648574328862","776953958890995784"]
+    if str(ctx.author.id) not in adminstrator_users:
+        await ctx.send("You're not allowed to use this... stupid.")
+        return
+    await ctx.send("Restarting the bot!")
+    await bot.close()
 
 bot.load_extension("game")
 bot.load_extension("databasecode")
