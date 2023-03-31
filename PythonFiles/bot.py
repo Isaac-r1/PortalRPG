@@ -241,6 +241,7 @@ async def restart(ctx):
 bot.load_extension("game")
 bot.load_extension("databasecode")
 bot.load_extension("Battle")
+bot.load_extension("Inventory")
 
 
 bot.run(TOKEN)
