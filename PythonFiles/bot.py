@@ -235,6 +235,9 @@ async def restart(ctx):
     await ctx.send("Restarting the bot!")
     await bot.close()
 
+
+    
+
 bot.load_extension("game")
 bot.load_extension("databasecode")
 bot.load_extension("Battle")
