@@ -7,7 +7,7 @@ from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode 
 
 class Battle(commands.Cog):
-    async def fight(ctx, user_id, creature):
+    async def fight(ctx, user_id, creature, rarity):
         await ctx.send("fight program in progress")
         conn = sqlite3.connect('characters.db')
         cursor = conn.cursor()
@@ -18,7 +18,7 @@ class Battle(commands.Cog):
         cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
         player = cursor.fetchone()
 
-        embed = Battle.fight_status(player, creature)
+        embed = Battle.fight_status(player, creature, rarity)
         embed = embed
         await ctx.send(embed = embed)
 
@@ -73,7 +73,7 @@ class Battle(commands.Cog):
                 if(php <= 0):
                     break
 
-                embed = Battle.fight_status(player, creature)
+                embed = Battle.fight_status(player, creature, rarity)
                 await ctx.send(embed = embed)
                 
             elif(msg.content.lower() == "f"):
@@ -82,7 +82,7 @@ class Battle(commands.Cog):
             else:
                 await ctx.send("Invalid!")
         
-        embed = Battle.fight_status(player, creature)
+        embed = Battle.fight_status(player, creature, rarity)
         await ctx.send(embed = embed)
             
         if(player[2] == 0):
@@ -102,8 +102,16 @@ class Battle(commands.Cog):
 
 
 
-    def fight_status(player, creature):
-        embed = discord.Embed(title=f"Battle - {player[1]} vs. {creature[0]}", color=discord.Color.red())
+    def fight_status(player, creature, rarity):
+
+        if(rarity == "A"):
+            ctitle = "Advanced"
+        elif(rarity == "G"):
+            ctitle = "Greater"
+        else:
+            ctitle = "Common"
+
+        embed = discord.Embed(title=f"Battle - {player[1]} vs. {ctitle} {creature[0]}", color=discord.Color.red())
         embed.add_field(name="Player HP", value=f"{player[2]}/{player[3]}", inline=True)
         embed.add_field(name="\u200b", value="\u200b", inline=True) # Add an empty field for spacing
         embed.add_field(name="\u00A0Enemy HP", value=f"{creature[1]}/{creature[2]}", inline=True)

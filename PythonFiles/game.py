@@ -57,27 +57,6 @@ class game(commands.Cog):
         
         #def combat(self, other):
     
-    global how_rare
-    def how_rare():
-        randomN = randint(0,100)
-        if(randomN >= 95):
-            rarity = "A"
-        elif(randomN >= 60 <= 95):
-                rarity = "G"
-        else:
-                rarity = "N" 
-        return rarity
-
-    global rarity_scaling
-    def rarity_scaling(value, r):
-        if(r == "N"):
-            return value 
-        if(r == "G"):
-            return value*(randint(10, 15)/10)
-        if(r == "A"):
-            return value*(randint(15, 20)/10)
-    
-
     class Character(Animated):
         max_level = 20
 
@@ -155,8 +134,26 @@ class game(commands.Cog):
             self.damage = damage #base damage of every creature
             self.biome = biome #what biome is this creature from
             #self.rarity = rarity #range from N/A, greater, advanced
+        
+        def how_rare():
+            randomN = randint(0,100)
+            if(randomN >= 95):
+                rarity = "A"
+            elif(randomN >= 60 <= 95):
+                    rarity = "G"
+            else:
+                    rarity = "N" 
+            return rarity
+        
+        def rarity_scaling(value, r):
+            if(r == "N"):
+                return value 
+            if(r == "G"):
+                return value*(randint(10, 15)/10)
+            if(r == "A"):
+                return value*(randint(15, 20)/10)
 
-        def spawnCreature(pbiome, level):
+        def spawnCreature(pbiome, level, rarity):
             conn = sqlite3.connect('creatures.db')
             c = conn.cursor()
             if level < 3:
@@ -170,7 +167,11 @@ class game(commands.Cog):
             results = c.fetchall()
             if not results:
                 return None
-            return random.choice(results)
+            creature = random.choice(results)
+            max_hp = game.CCreature.rarity_scaling(creature[2], rarity)
+            damage = game.CCreature.rarity_scaling(creature[5], rarity)
+            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], creature[4], int(damage), creature[6], creature[7], creature[8], creature[9])
+            return new_creature
 
         def creature_damage(name):
             with sqlite3.connect('creatures.db') as conn:
@@ -181,6 +182,7 @@ class game(commands.Cog):
                     return result[0]
                 else:
                     return "Unknown animal"
+        
         
         def getMaxHP(name):
             conn = sqlite3.connect('creatures.db')

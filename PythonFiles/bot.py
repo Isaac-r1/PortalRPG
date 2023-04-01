@@ -142,20 +142,31 @@ async def region(ctx, new_region: str):
 async def hunt(ctx):
     user_id = ctx.message.author.id
 
+    if game.Character.getRegion(user_id) is None:
+        await ctx.send("Enter a region!")
+        raise commands.CommandError("Invalid region")
+
     if game.Character.getMode(user_id).lower() != "adventure":
         await ctx.send("Change your mode to **adventure** to hunt!")
         raise commands.CommandError("**Invalid mode**")
     
-    if game.Character.getRegion(user_id) == "None":
-        await ctx.send("Enter a region!")
-        raise commands.CommandError("Invalid region")
 
     region = game.Character.getRegion(user_id)
     level = game.Character.getLevel(user_id)
-    creature = game.CCreature.spawnCreature(region, level)
+    rarity = game.CCreature.how_rare()
+
+    if(rarity == "A"):
+        ctitle = "Advanced"
+    elif(rarity == "G"):
+        ctitle = "Greater"
+    else:
+        ctitle = "Common"
+
+    creature = game.CCreature.spawnCreature(region, level, rarity)
+
     await ctx.send("An encounter has spawned!")
     if creature:
-        embed = discord.Embed(title=f"{creature[0]} Status", color=discord.Color.green())
+        embed = discord.Embed(title= ctitle + " " + f"{creature[0]} Status", color=discord.Color.green())
         embed.add_field(name="HP", value=f"{creature[1]}/{creature[2]}", inline=True)
         embed.add_field(name="XP", value=creature[3], inline=True)
         embed.add_field(name="Defense", value=creature[4], inline=True)
@@ -171,7 +182,7 @@ async def hunt(ctx):
     
     msg = await bot.wait_for("message", check=check)
     if(msg.content.lower() == "y"):
-        await Battle.fight(ctx, user_id, creature)
+        await Battle.fight(ctx, user_id, creature, rarity)
     else:
         await ctx.send("You fled the encounter!")
 
