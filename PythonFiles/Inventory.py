@@ -7,7 +7,12 @@ import discord
 from discord.ext import commands
 
 class Inventory(commands.Cog):
-    def create_inventory():
+
+    def get_inventory_connection():
+        conn = sqlite3.connect('inventory.db')
+        return conn
+
+    def create_inventory(user_id):
         with sqlite3.connect('inventory.db') as conn:
             c = conn.cursor()
             c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='inventory'")
@@ -16,10 +21,14 @@ class Inventory(commands.Cog):
                 c.execute('''CREATE TABLE inventory(
                     user_id INTEGER, 
                     item_id INTEGER,
-                    slot INTEGER
-                    PRIMARY KEY (user_id, slot)
+                    slot INTEGER,
+                    PRIMARY KEY (user_id, slot),
                     CHECK (slot >= 1 AND slot <= 32)
                 )''')
+
+            max_slot = 32
+            for slot in range(1, max_slot+1):
+                c.execute("INSERT OR IGNORE INTO inventory (user_id, slot) VALUES (?, ?)", (user_id, slot))
     
     def insert_into_inventory(user_id, item_id, slot):
         with sqlite3.connect('items.db') as conn:
@@ -32,8 +41,33 @@ class Inventory(commands.Cog):
 
         with sqlite3.connect('inventory.db') as conn:
             c = conn.cursor()
-            c.execute('SELECT * FROM inventory WHERE user_id = ?', (user_id))
+            c.execute('SELECT * FROM inventory WHERE user_id = ?', (user_id,))
+            rows = c.fetchall()
+
+            if not rows:
+                await ctx.send("Your inventory is empty.")
+                return
     
+            inventory_grid = ["\u200b"] * 32
+            for row in rows:
+                slot = row[2] - 1
+                with sqlite3.connect('items.db') as conn_items:
+                    c_items = conn_items.cursor()
+                    c_items.execute('SELECT name FROM items WHERE item_id = ?', (row[1],))
+                    item_row = c_items.fetchone()
+                    item_name = item_row[0] if item_row is not None else "empty slot"
+                inventory_grid[slot] = item_name
+
+            inventory_display = "```"
+            for i in range(0, 32, 8):
+                inventory_display += "╔════════════╗ ╔════════════╗ ╔════════════╗ ╔════════════╗\n"
+                inventory_display += "║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║\n".format(*inventory_grid[i:i+4])
+                inventory_display += "╠════════════╣ ╠════════════╣ ╠════════════╣ ╠════════════╣\n"
+                inventory_display += "║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║\n".format(*inventory_grid[i+4:i+8])
+                inventory_display += "╚════════════╝ ╚════════════╝ ╚════════════╝ ╚════════════╝\n\n"
+            inventory_display += "```"
+            await ctx.send(inventory_display)
+                    
     @commands.command()
     async def item_info(self, ctx, *args):
         args = [arg for arg in args if not isinstance(arg, discord.ext.commands.Context)]

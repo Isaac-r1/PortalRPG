@@ -11,6 +11,7 @@ import random
 from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode
 from PythonFiles.Battle import Battle
+from PythonFiles.Inventory import Inventory
 
 intents = discord.Intents.default()
 intents.members = True
@@ -38,7 +39,7 @@ if not table_exists:
         defense INTEGER,
         attack INTEGER,
         gold INTEGER,
-        inventory TEXT,
+        inventory INTEGER,
         w INTEGER,
         armor TEXT,
         accessory TEXT,
@@ -83,6 +84,27 @@ async def mode(ctx, new_mode: str):
     
     game.Character.changeMode(new_mode.upper(), user_id)
     await ctx.send("Mode changed to " + new_mode.upper() + "!")
+
+@bot.command()
+@commands.is_owner()
+async def insert(ctx, member: discord.Member, item_id: int, slot: int):
+    with sqlite3.connect('inventory.db') as conn:
+        c = conn.cursor()
+        # check if the row with the given user_id and slot already exists
+        c.execute("SELECT * FROM inventory WHERE user_id = ? AND slot = ?", (member.id, slot))
+        existing_row = c.fetchone()
+        if existing_row:
+            # if the row already exists, update it with the new values
+            c.execute("UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?", (item_id, member.id, slot))
+        else:
+            # if the row doesn't exist, insert a new row
+            c.execute("INSERT INTO inventory (user_id, item_id, slot) VALUES (?, ?, ?)", (member.id, item_id, slot))
+        conn.commit()
+
+
+
+
+    
 
 @bot.command(name = "delete_user")
 @commands.is_owner()
@@ -158,6 +180,7 @@ async def create(ctx, chtype: str, name: str):
     user_id = ctx.message.author.id
     
     if not (chtype == "mage" or chtype == "archer" or chtype == "swordsman"):
+        
         await ctx.send("please pick one of the three following classes: mage, archer, swordsman then provide a name!")
         raise commands.CommandError("Not a valid class!")
     
@@ -170,7 +193,8 @@ async def create(ctx, chtype: str, name: str):
     result = cursor.fetchone()
 
     if result is None:
-        new_character = game.Character(name=name, HP=100, max_HP=100, XP=0, defense=0, attack=3, gold=10, inventory= "Empty", w = Wchoice(chtype, user_id), armor = None, accessory = None, ctype=chtype, battling=False, mode="AT HOME", region=None,  level=1, user_id=user_id)
+        Inventory.create_inventory(user_id)
+        new_character = game.Character(name=name, HP=100, max_HP=100, XP=0, defense=0, attack=3, gold=10, inventory= user_id, w = Wchoice(chtype, user_id), armor = None, accessory = None, ctype=chtype, battling=False, mode="AT HOME", region=None,  level=1, user_id=user_id)
         cursor.execute('INSERT INTO characters (name, HP, max_HP, XP, defense, attack, gold, inventory, w, armor, accessory, ctype, battling, mode, region, level, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (new_character.name, new_character.HP, new_character.max_HP, new_character.XP, new_character.defense, new_character.attack, int(new_character.gold), new_character.inventory, new_character.w, new_character.armor, new_character.accessory, new_character.ctype, new_character.battling, new_character.mode, new_character.region, new_character.level, new_character.user_id))
         conn.commit()
         await ctx.send("Your character, " + name + ",has been created, type: " + chtype)
@@ -191,7 +215,6 @@ async def status(ctx):
         embed.add_field(name="Defense", value=row[5], inline=True)
         embed.add_field(name="Attack", value=row[6], inline=True)
         embed.add_field(name="Gold", value=row[7], inline=True)
-        embed.add_field(name="Inventory", value=row[8], inline=False)
         embed.add_field(name="Weapon Slots", value= game.weapon.get_weapon_name(row[9]), inline=True)
         embed.add_field(name="Armor", value=row[10], inline=True)
         embed.add_field(name="Accessory", value=row[11], inline=True)
