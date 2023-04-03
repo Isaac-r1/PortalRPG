@@ -44,6 +44,18 @@ class game(commands.Cog):
                     return result[0]
                 else:
                     return "Unknown Weapon"
+        
+        def random_rarity():
+            n = random.randint(1,100)
+            if(n >= 95):
+                return "L"
+            elif(n >= 80):
+                return "R"
+            elif(n >= 50):
+                return "UC"
+            else:
+                return "C"
+
     
     class Animated:
         def __init__(self, name, HP, max_HP, XP, defense, attack, gold):
@@ -170,8 +182,21 @@ class game(commands.Cog):
             creature = random.choice(results)
             max_hp = game.CCreature.rarity_scaling(creature[2], rarity)
             damage = game.CCreature.rarity_scaling(creature[5], rarity)
-            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], creature[4], int(damage), creature[6], creature[7], creature[8], creature[9])
-            return new_creature
+            defense = game.CCreature.rarity_scaling(creature[4], rarity)
+            gold = game.CCreature.rarity_scaling(creature[7], rarity)
+            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], int(defense), int(damage), creature[6], int(gold), creature[8], creature[9])
+
+            item_rarity = game.weapon.random_rarity()
+            conn1 = sqlite3.connect('items.db')
+            c1 = conn1.cursor()
+            c1.execute("SELECT * FROM items WHERE rarity=?", (item_rarity,))
+            iresults = c1.fetchall()
+            if not iresults:
+                return None
+            item = random.choice(iresults)
+
+
+            return (new_creature, item)
 
         def creature_damage(name):
             with sqlite3.connect('creatures.db') as conn:

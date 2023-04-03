@@ -162,7 +162,7 @@ async def hunt(ctx):
     else:
         ctitle = "Common"
 
-    creature = game.CCreature.spawnCreature(region, level, rarity)
+    creature, item = game.CCreature.spawnCreature(region, level, rarity)
 
     await ctx.send("An encounter has spawned!")
     if creature:
@@ -180,11 +180,16 @@ async def hunt(ctx):
     def check(message):
         return message.author == ctx.author and message.channel == ctx.channel
     
-    msg = await bot.wait_for("message", check=check)
-    if(msg.content.lower() == "y"):
-        await Battle.fight(ctx, user_id, creature, rarity)
-    else:
-        await ctx.send("You fled the encounter!")
+    while True:
+        msg = await bot.wait_for("message", check=check)
+        if msg.content.lower() == "y":
+            await Battle.fight(ctx, user_id, creature, rarity, item)
+            break
+        elif msg.content.lower() == "n":
+            await ctx.send("You fled the encounter!")
+            break
+        else:
+            await ctx.send("Invalid input. Please enter 'y' or 'n'.")
 
 @bot.command(name = "create")
 async def create(ctx, chtype: str, name: str):

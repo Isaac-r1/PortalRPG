@@ -7,7 +7,7 @@ from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode 
 
 class Battle(commands.Cog):
-    async def fight(ctx, user_id, creature, rarity):
+    async def fight(ctx, user_id, creature, rarity, item):
         await ctx.send("fight program in progress")
         conn = sqlite3.connect('characters.db')
         cursor = conn.cursor()
@@ -89,8 +89,7 @@ class Battle(commands.Cog):
             await ctx.send("You died!")
         if(creature[1] == 0):
             await ctx.send("You win!")
-
-
+            Battle.loot_drop(user_id,item)
 
         cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
         conn.commit()
@@ -98,6 +97,25 @@ class Battle(commands.Cog):
         # Reset the HP of the creature to their maximum HP
         cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
         conn1.commit()
+        
+
+    def loot_drop(user_id, item):
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM inventory WHERE user_id = ?', (user_id,))
+        rows = c.fetchall()
+
+        item_id = item[0]
+
+        for i in range(1, 32):
+            for row in rows:
+                if not row[2]:
+                    c.execute("UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?", (item_id, user_id, i))
+                    conn.commit()
+                    return "Item inserted into inventory"
+        return "Inventory Full"
+
+        
         
 
 

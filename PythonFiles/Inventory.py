@@ -36,7 +36,7 @@ class Inventory(commands.Cog):
             c.execute("INSERT INTO inventory (user_id, item_id, slot) VALUES (?, ?, ?)", (user_id, item_id, slot))
     
     @commands.command()
-    async def get_inventory(self, ctx):
+    async def inv(self, ctx):
         user_id = ctx.message.author.id
 
         with sqlite3.connect('inventory.db') as conn:
@@ -58,15 +58,13 @@ class Inventory(commands.Cog):
                     item_name = item_row[0] if item_row is not None else "empty slot"
                 inventory_grid[slot] = item_name
 
-            inventory_display = "```"
+            embed = discord.Embed(title=f"{ctx.author}'s inventory")
             for i in range(0, 32, 8):
-                inventory_display += "╔════════════╗ ╔════════════╗ ╔════════════╗ ╔════════════╗\n"
-                inventory_display += "║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║\n".format(*inventory_grid[i:i+4])
-                inventory_display += "╠════════════╣ ╠════════════╣ ╠════════════╣ ╠════════════╣\n"
-                inventory_display += "║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║ ║ {:<10} ║\n".format(*inventory_grid[i+4:i+8])
-                inventory_display += "╚════════════╝ ╚════════════╝ ╚════════════╝ ╚════════════╝\n\n"
-            inventory_display += "```"
-            await ctx.send(inventory_display)
+                values = [str(item)[:18] + "..." if len(str(item)) > 18 else item for item in inventory_grid[i:i+8]]
+                name = f"Slot {i+1}-{i+8}"
+                embed.add_field(name=name, value="\n".join(values), inline=False)
+            await ctx.send(embed=embed)
+    
                     
     @commands.command()
     async def item_info(self, ctx, *args):
