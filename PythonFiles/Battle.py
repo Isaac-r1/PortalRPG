@@ -15,6 +15,8 @@ class Battle(commands.Cog):
         conn1 = sqlite3.connect('creatures.db')
         cursor1 = conn1.cursor()
 
+        cmax_hp = creature[2]
+
         cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
         player = cursor.fetchone()
 
@@ -41,7 +43,7 @@ class Battle(commands.Cog):
                 if(ehp < 0):
                     ehp = 0
 
-                cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (ehp, creature[0]))
+                cursor1.execute('UPDATE creatures SET HP = ?, max_hp = ? WHERE name = ?', (ehp, cmax_hp, creature[0]))
                 conn1.commit()
 
                 # Fetch updated creature values from the database
@@ -78,6 +80,12 @@ class Battle(commands.Cog):
                 
             elif(msg.content.lower() == "f"):
                 await ctx.send("You fled the encounter!")
+                cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+                conn.commit()
+
+                # Reset the HP of the creature to their maximum HP
+                cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
+                conn1.commit()
                 break
             else:
                 await ctx.send("Invalid!")
@@ -86,23 +94,18 @@ class Battle(commands.Cog):
         await ctx.send(embed = embed)
             
         if(player[2] == 0):
-            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-            conn.commit()
-
-            # Reset the HP of the creature to their maximum HP
-            cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
-            conn1.commit()
             await ctx.send("You died!")
 
         if(creature[1] == 0):
             Battle.loot_drop(user_id,item)
-            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-            conn.commit()
-
-            # Reset the HP of the creature to their maximum HP
-            cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
-            conn1.commit()
             await ctx.send("You win!")
+        
+        cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+        conn.commit()
+
+        # Reset the HP of the creature to their maximum HP
+        cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
+        conn1.commit()
             
 
         

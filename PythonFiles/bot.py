@@ -17,7 +17,7 @@ intents = discord.Intents.default()
 intents.members = True
 
 bot = commands.Bot(command_prefix='!', case_insensitive=True, 
-                   help_command=commands.DefaultHelpCommand(dm_help=True), 
+                   help_command=commands.DefaultHelpCommand(dm_help=False), 
                    intents=intents)
 bot.case_insensitive = True
 bot.command_prefix = ['!']
@@ -100,6 +100,21 @@ async def insert(ctx, member: discord.Member, item_id: int, slot: int):
             c.execute("INSERT INTO inventory (user_id, item_id, slot) VALUES (?, ?, ?)", (member.id, item_id, slot))
         conn.commit()
 
+@bot.command(name="drop_item")
+async def drop_item(ctx, slot):
+    user_id = ctx.message.author.id
+    with sqlite3.connect('Inventory.db') as conn:
+        c = conn.cursor()
+        c.execute('SELECT * FROM inventory WHERE user_id = ? AND slot = ?', (user_id, slot))
+        row = c.fetchone()
+
+        if row is None:
+            await ctx.send("Invalid slot number.")
+            return
+
+        c.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
+        conn.commit()
+        await ctx.send(f"Item in slot {slot} removed from your inventory.")
     
 @bot.command(name = "delete_user")
 @commands.is_owner()
@@ -110,6 +125,10 @@ async def delete_user(ctx, member: discord.Member):
     with sqlite3.connect('player_weapons.db') as conn:
         c = conn.cursor()
         c.execute("DELETE FROM player_weapons WHERE user_id=?", (member.id,))
+    with sqlite3.connect('inventory.db') as conn:
+        c = conn.cursor()
+        c.execute("DELETE FROM inventory WHERE user_id=?", (member.id,))
+
     await ctx.send(f"User with ID {member.id} has been deleted from the database.")
 
 @bot.command(name = "uid")

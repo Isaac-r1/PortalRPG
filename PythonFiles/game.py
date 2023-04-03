@@ -184,7 +184,7 @@ class game(commands.Cog):
             damage = game.CCreature.rarity_scaling(creature[5], rarity)
             defense = game.CCreature.rarity_scaling(creature[4], rarity)
             gold = game.CCreature.rarity_scaling(creature[7], rarity)
-            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], int(defense), int(damage), creature[6], int(gold), creature[8], creature[9])
+            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], int(defense), int(damage), creature[6], int(gold), creature[2], creature[9])
 
             item_rarity = game.weapon.random_rarity()
             conn1 = sqlite3.connect('items.db')
@@ -194,7 +194,6 @@ class game(commands.Cog):
             if not iresults:
                 return None
             item = random.choice(iresults)
-
 
             return (new_creature, item)
 
