@@ -59,7 +59,6 @@ def Wchoice(chtype, user_id):
     elif(chtype == "swordsman"):
         WID = 1
     else:
-        
         raise ValueError("Not a valid class!")
         
     # Insert the weapon into the database
@@ -101,11 +100,7 @@ async def insert(ctx, member: discord.Member, item_id: int, slot: int):
             c.execute("INSERT INTO inventory (user_id, item_id, slot) VALUES (?, ?, ?)", (member.id, item_id, slot))
         conn.commit()
 
-
-
-
     
-
 @bot.command(name = "delete_user")
 @commands.is_owner()
 async def delete_user(ctx, member: discord.Member):

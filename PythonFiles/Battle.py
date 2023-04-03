@@ -86,17 +86,25 @@ class Battle(commands.Cog):
         await ctx.send(embed = embed)
             
         if(player[2] == 0):
+            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+            conn.commit()
+
+            # Reset the HP of the creature to their maximum HP
+            cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
+            conn1.commit()
             await ctx.send("You died!")
+
         if(creature[1] == 0):
-            await ctx.send("You win!")
             Battle.loot_drop(user_id,item)
+            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+            conn.commit()
 
-        cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-        conn.commit()
+            # Reset the HP of the creature to their maximum HP
+            cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
+            conn1.commit()
+            await ctx.send("You win!")
+            
 
-        # Reset the HP of the creature to their maximum HP
-        cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
-        conn1.commit()
         
 
     def loot_drop(user_id, item):
@@ -107,12 +115,11 @@ class Battle(commands.Cog):
 
         item_id = item[0]
 
-        for i in range(1, 32):
-            for row in rows:
-                if not row[2]:
-                    c.execute("UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?", (item_id, user_id, i))
-                    conn.commit()
-                    return "Item inserted into inventory"
+        for row in rows:
+            if not row[1]:
+                c.execute("UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?", (item_id, user_id, row[2]))
+                conn.commit()
+                return "Item inserted into inventory"
         return "Inventory Full"
 
         
