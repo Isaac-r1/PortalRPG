@@ -18,10 +18,13 @@ intents.members = True
 
 bot = commands.Bot(command_prefix='!', case_insensitive=True, 
                    help_command=commands.DefaultHelpCommand(dm_help=False), 
-                   intents=intents)
+                   intents=intents, owner_ids={605418818864414762, 678401615333556277})
 bot.case_insensitive = True
 bot.command_prefix = ['!']
 
+@bot.event
+async def setup_hook():
+    bot.load_extension("jishaku")
 databasecode.create_player_weapons_table()
 
 conn = sqlite3.connect('characters.db')
