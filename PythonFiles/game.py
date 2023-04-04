@@ -44,6 +44,16 @@ class game(commands.Cog):
                     return result[0]
                 else:
                     return "Unknown Weapon"
+                
+        def get_accessory_name(item_id):
+            with sqlite3.connect('items.db') as conn:
+                c = conn.cursor()
+                c.execute('SELECT name FROM items WHERE item_id = ?', (item_id,))
+                result = c.fetchone()
+                if result:
+                    return result[0]
+                else:
+                    return "Unknown item"
         
         def random_rarity():
             n = random.randint(1,100)

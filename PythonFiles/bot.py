@@ -24,7 +24,8 @@ bot.command_prefix = ['!']
 
 @bot.event
 async def setup_hook():
-    bot.load_extension("jishaku")
+    await bot.load_extension("jishaku")
+
 databasecode.create_player_weapons_table()
 
 conn = sqlite3.connect('characters.db')
@@ -44,8 +45,8 @@ if not table_exists:
         gold INTEGER,
         inventory INTEGER,
         w INTEGER,
-        armor TEXT,
-        accessory TEXT,
+        armor INTEGER,
+        accessory INTEGER,
         ctype TEXT,
         battling INTEGER,
         mode TEXT,
@@ -131,6 +132,7 @@ async def delete_user(ctx, member: discord.Member):
     with sqlite3.connect('inventory.db') as conn:
         c = conn.cursor()
         c.execute("DELETE FROM inventory WHERE user_id=?", (member.id,))
+    
 
     await ctx.send(f"User with ID {member.id} has been deleted from the database.")
 
@@ -250,7 +252,7 @@ async def status(ctx):
         embed.add_field(name="Gold", value=row[7], inline=True)
         embed.add_field(name="Weapon Slots", value= game.weapon.get_weapon_name(row[9]), inline=True)
         embed.add_field(name="Armor", value=row[10], inline=True)
-        embed.add_field(name="Accessory", value=row[11], inline=True)
+        embed.add_field(name="Accessory", value= game.weapon.get_accessory_name(row[11]), inline=True)
         embed.add_field(name="Class", value=row[12], inline=True)
         embed.add_field(name="Mode", value=row[14], inline=False)
         embed.add_field(name="Region", value=row[15], inline=True)
@@ -258,6 +260,42 @@ async def status(ctx):
         await ctx.send(embed=embed)
     else:
         await ctx.send("You don't have a character yet. Use `!create` to create one.")
+
+@bot.command()
+async def equip_accessory(ctx, slot: int):
+    user_id = ctx.message.author.id
+    with sqlite3.connect('inventory.db') as conn:
+        c = conn.cursor()
+        c.execute('SELECT * FROM inventory WHERE user_id=?', (user_id,))
+        inventory_data = c.fetchall()
+        item_data = inventory_data[slot - 1] #item_data accesses the item information within the correct slot
+        item_id = item_data[1]
+        print(item_id)
+
+    with sqlite3.connect('items.db') as conn1:
+        c1 = conn1.cursor()
+        c1.execute('SELECT * FROM items WHERE item_id = ?', (item_id,))
+        result = c1.fetchone()
+
+    if result is None:
+        await ctx.send("Item not found.")
+        return
+
+    if result[2] != 'accessory':
+        await ctx.send("This item is not an accessory.")
+        return
+
+    # Equip the accessory and display the name
+    c.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
+    conn.commit()
+    await ctx.send(f"Equipped {result[1]}!")
+    
+    with sqlite3.connect('characters.db') as conn:
+        c = conn.cursor()
+        c.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
+        conn.commit()
+
+
 
 
 @bot.command(name="weaponInfo")
@@ -292,7 +330,7 @@ async def restart(ctx):
     await bot.close()
 
 
-    
+
 
 bot.load_extension("game")
 bot.load_extension("databasecode")
