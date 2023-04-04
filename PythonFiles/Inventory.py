@@ -22,6 +22,8 @@ class Inventory(commands.Cog):
                     user_id INTEGER, 
                     item_id INTEGER,
                     slot INTEGER,
+                    accessory_slot INTEGER DEFAULT NULL,
+                    armor_slot INTEGER DEFAULT NULL,
                     PRIMARY KEY (user_id, slot),
                     CHECK (slot >= 1 AND slot <= 32)
                 )''')
@@ -47,8 +49,9 @@ class Inventory(commands.Cog):
             if not rows:
                 await ctx.send("Your inventory is empty.")
                 return
-    
+
             inventory_grid = ["\u200b"] * 32
+            accessory_name = "Empty"
             for row in rows:
                 slot = row[2] - 1
                 with sqlite3.connect('items.db') as conn_items:
@@ -56,14 +59,20 @@ class Inventory(commands.Cog):
                     c_items.execute('SELECT name FROM items WHERE item_id = ?', (row[1],))
                     item_row = c_items.fetchone()
                     item_name = item_row[0] if item_row is not None else "empty slot"
-                inventory_grid[slot] = item_name
+                if row[3] == "accessory_slot":
+                    accessory_name = item_name
+                else:
+                    inventory_grid[slot] = item_name
 
             embed = discord.Embed(title=f"{ctx.author}'s inventory")
             for i in range(0, 32, 8):
                 values = [str(item)[:18] + "..." if len(str(item)) > 18 else item for item in inventory_grid[i:i+8]]
                 name = f"Slot {i+1}-{i+8}"
                 embed.add_field(name=name, value="\n".join(values), inline=False)
+            embed.add_field(name="Equipped Accessory", value=accessory_name, inline=False)
             await ctx.send(embed=embed)
+
+
     
                     
     @commands.command()
@@ -91,6 +100,35 @@ class Inventory(commands.Cog):
         except sqlite3.Error as e:
             print(e)
             await ctx.send("An error occurred while retrieving item information.")
+    
+    @commands.command()
+    async def equip_accessory(self, ctx, slot: int):
+        print(f"user_id: {ctx.author.id}")
+        print(f"slot: {slot}")
+        user_id = ctx.message.author.id
+        with sqlite3.connect('inventory.db') as conn:
+            c = conn.cursor()
+            c.execute('SELECT * FROM inventory WHERE user_id = ? AND slot = ?', (user_id, slot))
+            inventory_row = c.fetchone()
+
+            if inventory_row is None:
+                await ctx.send("Invalid slot number.")
+                return
+
+            item_id = inventory_row[1]
+            with sqlite3.connect('items.db') as item_conn:
+                item_c = item_conn.cursor()
+                item_c.execute('SELECT * FROM items WHERE item_id = ? AND type = "accessory"', (item_id,))
+                item_row = item_c.fetchone()
+
+                if item_row is None:
+                    await ctx.send("The item in this slot is not an accessory.")
+                    return
+
+        
+
+
+
 
 def setup(bot):
     bot.add_cog(Inventory())

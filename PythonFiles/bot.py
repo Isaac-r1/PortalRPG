@@ -101,9 +101,9 @@ async def insert(ctx, member: discord.Member, item_id: int, slot: int):
         conn.commit()
 
 @bot.command(name="drop_item")
-async def drop_item(ctx, slot):
+async def drop_item(ctx, slot: int):
     user_id = ctx.message.author.id
-    with sqlite3.connect('Inventory.db') as conn:
+    with sqlite3.connect('inventory.db') as conn:
         c = conn.cursor()
         c.execute('SELECT * FROM inventory WHERE user_id = ? AND slot = ?', (user_id, slot))
         row = c.fetchone()
