@@ -148,7 +148,7 @@ async def region(ctx, new_region: str):
         await ctx.send("Change your mode to ADVENTURE!")
         raise commands.CommandError("Invalid mode")
 
-    if new_region.lower() not in ["tundra", "ocean", "forest", "swamp", "mountain"]:
+    if new_region.lower() not in ["ocean", "forest", "swamp", "mountain"]:
         await ctx.send("invalid region")
         raise commands.CommandError("invalid region!")
 
@@ -250,9 +250,9 @@ async def status(ctx):
         embed.add_field(name="Defense", value=row[5], inline=True)
         embed.add_field(name="Attack", value=row[6], inline=True)
         embed.add_field(name="Gold", value=row[7], inline=True)
-        embed.add_field(name="Weapon Slots", value= game.weapon.get_weapon_name(row[9]), inline=True)
-        embed.add_field(name="Armor", value=row[10], inline=True)
-        embed.add_field(name="Accessory", value= game.weapon.get_accessory_name(row[11]), inline=True)
+        embed.add_field(name="Weapon Slots", value= game.weapon.get_name(row[9]), inline=True)
+        embed.add_field(name="Armor", value=game.weapon.get_name(row[10]), inline=True)
+        embed.add_field(name="Accessory", value= game.weapon.get_name(row[11]), inline=True)
         embed.add_field(name="Class", value=row[12], inline=True)
         embed.add_field(name="Mode", value=row[14], inline=False)
         embed.add_field(name="Region", value=row[15], inline=True)
@@ -260,6 +260,113 @@ async def status(ctx):
         await ctx.send(embed=embed)
     else:
         await ctx.send("You don't have a character yet. Use `!create` to create one.")
+
+@bot.command()
+async def equip_armor(ctx, slot: int):
+    user_id = ctx.message.author.id
+    with sqlite3.connect('characters.db') as conn:
+        c = conn.cursor()
+        c.execute('SELECT ctype FROM characters WHERE user_id = ?', (user_id,))
+        class_type = c.fetchone()[0]
+    
+    with sqlite3.connect('inventory.db') as conn1:
+        c1 = conn1.cursor()
+        c1.execute('SELECT * FROM inventory WHERE user_id=?', (user_id,))
+        inventory_data = c1.fetchall()
+        item_data = inventory_data[slot - 1] #item_data accesses the item information within the correct slot
+        item_id = item_data[1]
+    
+    with sqlite3.connect('items.db') as conn2:
+        c2 = conn2.cursor()
+        c2.execute('SELECT * FROM items WHERE item_id = ?', (item_id,))
+        result = c2.fetchone()
+        print(result[8])
+    
+    if result is None:
+        await ctx.send("Item not found")
+        return
+    
+    if result[8][0] != class_type[0]:
+        await ctx.send(f"You can't equip {result[1]} because it's not suitable for your class.")
+        return
+    
+    if result[2] != 'armor':
+        await ctx.send("This item is not an armor piece")
+        return
+
+     # Equip the accessory and display the name
+    with sqlite3.connect('characters.db') as conn3:
+        c3 = conn3.cursor()
+        c3.execute('SELECT armor FROM characters WHERE user_id = ?', (user_id,))
+        old_armor = c3.fetchone()[0]
+        if old_armor:
+            # Remove equipped accessory and add it to the user's inventory
+            c1.execute('UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?', (old_armor, user_id, slot))
+            conn1.commit()  # commit changes made to inventory table
+            c3.execute('UPDATE characters SET armor = ? WHERE user_id = ?', (item_id, user_id))
+            conn3.commit()  # commit changes made to characters table
+            await ctx.send(f"Swapped {result[1]} with {old_armor}.")
+        else:
+            # Equip the accessory and display the name
+            c1.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
+            conn1.commit()  # commit changes made to inventory table
+            c3.execute('UPDATE characters SET armor = ? WHERE user_id = ?', (item_id, user_id))
+            conn3.commit()  # commit changes made to characters table
+            await ctx.send(f"Equipped {result[1]}!")
+
+@bot.command()
+async def equip_weapon(ctx, slot: int):
+    user_id = ctx.message.author.id
+    with sqlite3.connect('characters.db') as conn:
+        c = conn.cursor()
+        c.execute('SELECT ctype FROM characters WHERE user_id = ?', (user_id,))
+        class_type = c.fetchone()[0]
+    
+    with sqlite3.connect('inventory.db') as conn1:
+        c1 = conn1.cursor()
+        c1.execute('SELECT * FROM inventory WHERE user_id=?', (user_id,))
+        inventory_data = c1.fetchall()
+        item_data = inventory_data[slot - 1] #item_data accesses the item information within the correct slot
+        item_id = item_data[1]
+    
+    with sqlite3.connect('items.db') as conn2:
+        c2 = conn2.cursor()
+        c2.execute('SELECT * FROM items WHERE item_id = ?', (item_id,))
+        result = c2.fetchone()
+        print(result[8])
+    
+    if result is None:
+        await ctx.send("Item not found")
+        return
+    
+    if result[8][0].lower() != class_type[0].lower():
+        await ctx.send(f"You can't equip {result[1]} because it's not suitable for your class.")
+        return
+    
+    if result[2] != 'weapon':
+        await ctx.send("This item is not an weapon!")
+        return
+
+     # Equip the accessory and display the name
+    with sqlite3.connect('characters.db') as conn3:
+        c3 = conn3.cursor()
+        c3.execute('SELECT w FROM characters WHERE user_id = ?', (user_id,))
+        old_armor = c3.fetchone()[0]
+        if old_armor:
+            # Remove equipped accessory and add it to the user's inventory
+            c1.execute('UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?', (old_armor, user_id, slot))
+            conn1.commit()  # commit changes made to inventory table
+            c3.execute('UPDATE characters SET w = ? WHERE user_id = ?', (item_id, user_id))
+            conn3.commit()  # commit changes made to characters table
+            await ctx.send(f"Swapped {result[1]} with {old_armor}.")
+        else:
+            # Equip the accessory and display the name
+            c1.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
+            conn1.commit()  # commit changes made to inventory table
+            c3.execute('UPDATE characters SET w = ? WHERE user_id = ?', (item_id, user_id))
+            conn3.commit()  # commit changes made to characters table
+            await ctx.send(f"Equipped {result[1]}!")
+
 
 @bot.command()
 async def equip_accessory(ctx, slot: int):
@@ -270,7 +377,6 @@ async def equip_accessory(ctx, slot: int):
         inventory_data = c.fetchall()
         item_data = inventory_data[slot - 1] #item_data accesses the item information within the correct slot
         item_id = item_data[1]
-        print(item_id)
 
     with sqlite3.connect('items.db') as conn1:
         c1 = conn1.cursor()
@@ -286,14 +392,24 @@ async def equip_accessory(ctx, slot: int):
         return
 
     # Equip the accessory and display the name
-    c.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
-    conn.commit()
-    await ctx.send(f"Equipped {result[1]}!")
-    
-    with sqlite3.connect('characters.db') as conn:
-        c = conn.cursor()
-        c.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
-        conn.commit()
+    with sqlite3.connect('characters.db') as conn3:
+        c3 = conn3.cursor()
+        c3.execute('SELECT accessory FROM characters WHERE user_id = ?', (user_id,))
+        old_accessory = c3.fetchone()[0]
+        if old_accessory:
+            # Remove equipped accessory and add it to the user's inventory
+            c.execute('UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?', (old_accessory, user_id, slot))
+            conn.commit()  # commit changes made to inventory table
+            c3.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
+            conn3.commit()  # commit changes made to characters table
+            await ctx.send(f"Swapped {result[1]} with {old_accessory}.")
+        else:
+            # Equip the accessory and display the name
+            c.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
+            conn.commit()  # commit changes made to inventory table
+            c3.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
+            conn3.commit()  # commit changes made to characters table
+            await ctx.send(f"Equipped {result[1]}!")
 
 
 

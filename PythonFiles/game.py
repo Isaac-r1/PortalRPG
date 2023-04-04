@@ -45,7 +45,7 @@ class game(commands.Cog):
                 else:
                     return "Unknown Weapon"
                 
-        def get_accessory_name(item_id):
+        def get_name(item_id):
             with sqlite3.connect('items.db') as conn:
                 c = conn.cursor()
                 c.execute('SELECT name FROM items WHERE item_id = ?', (item_id,))
