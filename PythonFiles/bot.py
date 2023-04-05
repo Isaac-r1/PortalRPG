@@ -26,8 +26,6 @@ bot.command_prefix = ['!']
 async def setup_hook():
     await bot.load_extension("jishaku")
 
-databasecode.create_player_weapons_table()
-
 conn = sqlite3.connect('characters.db')
 cursor = conn.cursor()
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='characters'")
@@ -64,10 +62,6 @@ def Wchoice(chtype, user_id):
         WID = 1
     else:
         raise ValueError("Not a valid class!")
-        
-    # Insert the weapon into the database
-    databasecode.insert_player_weapon(user_id, WID, 1)
-    
     print(f"Class: {chtype}, WID: {WID}")
     return WID
 
@@ -126,9 +120,6 @@ async def delete_user(ctx, member: discord.Member):
     with sqlite3.connect('characters.db') as conn:
         c = conn.cursor()
         c.execute("DELETE FROM characters WHERE user_id=?", (member.id,))
-    with sqlite3.connect('player_weapons.db') as conn:
-        c = conn.cursor()
-        c.execute("DELETE FROM player_weapons WHERE user_id=?", (member.id,))
     with sqlite3.connect('inventory.db') as conn:
         c = conn.cursor()
         c.execute("DELETE FROM inventory WHERE user_id=?", (member.id,))
@@ -229,7 +220,7 @@ async def create(ctx, chtype: str, name: str):
 
     if result is None:
         Inventory.create_inventory(user_id)
-        new_character = game.Character(name=name, HP=100, max_HP=100, XP=0, defense=0, attack=3, gold=10, inventory= user_id, w = Wchoice(chtype, user_id), armor = None, accessory = None, ctype=chtype, battling=False, mode="AT HOME", region=None,  level=1, user_id=user_id)
+        new_character = game.Character(name=name, HP=100, max_HP=100, XP=0, defense=0, attack=0, gold=10, inventory= user_id, w = Wchoice(chtype, user_id), armor = None, accessory = None, ctype=chtype, battling=False, mode="AT HOME", region=None,  level=1, user_id=user_id)
         cursor.execute('INSERT INTO characters (name, HP, max_HP, XP, defense, attack, gold, inventory, w, armor, accessory, ctype, battling, mode, region, level, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (new_character.name, new_character.HP, new_character.max_HP, new_character.XP, new_character.defense, new_character.attack, int(new_character.gold), new_character.inventory, new_character.w, new_character.armor, new_character.accessory, new_character.ctype, new_character.battling, new_character.mode, new_character.region, new_character.level, new_character.user_id))
         conn.commit()
         await ctx.send("Your character, " + name + ",has been created, type: " + chtype)
@@ -280,7 +271,6 @@ async def equip_armor(ctx, slot: int):
         c2 = conn2.cursor()
         c2.execute('SELECT * FROM items WHERE item_id = ?', (item_id,))
         result = c2.fetchone()
-        print(result[8])
     
     if result is None:
         await ctx.send("Item not found")
@@ -305,6 +295,7 @@ async def equip_armor(ctx, slot: int):
             conn1.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET armor = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
+            update_player_stats(item_id,user_id, "swapA")
             await ctx.send(f"Swapped {result[1]} with {old_armor}.")
         else:
             # Equip the accessory and display the name
@@ -312,6 +303,7 @@ async def equip_armor(ctx, slot: int):
             conn1.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET armor = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
+            update_player_stats(item_id,user_id, None)
             await ctx.send(f"Equipped {result[1]}!")
 
 @bot.command()
@@ -333,7 +325,6 @@ async def equip_weapon(ctx, slot: int):
         c2 = conn2.cursor()
         c2.execute('SELECT * FROM items WHERE item_id = ?', (item_id,))
         result = c2.fetchone()
-        print(result[8])
     
     if result is None:
         await ctx.send("Item not found")
@@ -351,15 +342,17 @@ async def equip_weapon(ctx, slot: int):
     with sqlite3.connect('characters.db') as conn3:
         c3 = conn3.cursor()
         c3.execute('SELECT w FROM characters WHERE user_id = ?', (user_id,))
-        old_armor = c3.fetchone()[0]
-        if old_armor:
+        old_weapon = c3.fetchone()[0]
+        if old_weapon:
+            update_player_stats(item_id,user_id, "swapW")
             # Remove equipped accessory and add it to the user's inventory
-            c1.execute('UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?', (old_armor, user_id, slot))
+            c1.execute('UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?', (old_weapon, user_id, slot))
             conn1.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET w = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
-            await ctx.send(f"Swapped {result[1]} with {old_armor}.")
+            await ctx.send(f"Swapped {result[1]} with {old_weapon}.")
         else:
+            update_player_stats(item_id,user_id, None)
             # Equip the accessory and display the name
             c1.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
             conn1.commit()  # commit changes made to inventory table
@@ -402,6 +395,7 @@ async def equip_accessory(ctx, slot: int):
             conn.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
+            update_player_stats(item_id,user_id, "swapAC")
             await ctx.send(f"Swapped {result[1]} with {old_accessory}.")
         else:
             # Equip the accessory and display the name
@@ -409,7 +403,46 @@ async def equip_accessory(ctx, slot: int):
             conn.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
+            update_player_stats(item_id,user_id, None)
             await ctx.send(f"Equipped {result[1]}!")
+
+def update_player_stats(item_id, user_id, swap):
+    print(item_id)
+    conn = sqlite3.connect('characters.db')
+    c = conn.cursor()
+    c.execute('SELECT attack, defense FROM characters WHERE user_id = ?', (user_id,))
+    player_stats = c.fetchone() #this is the original attack and def (base stats)
+
+    c.execute('SELECT w, armor, accessory FROM characters WHERE user_id=?', (user_id,))
+    active_stats = c.fetchone() #This is checking the current weapon, armor, accessory slots if they're full
+    if(swap == "swapW"):
+        subtract = active_stats[0] #if we're swapping a weapon, we set subtract as the WID
+    elif(swap == "swapA"): 
+        subtract = active_stats[1] #if armor, subtract = AID
+    elif(swap == "swapAC"):
+        subtract = active_stats[2] #if accessory, subtract = ACID
+    else:
+        subtract = None #if we're just inserting an item, subtract is jsut none
+
+    conn1 = sqlite3.connect('items.db')
+    c1 = conn1.cursor()
+    c1.execute('SELECT attack, defense FROM items WHERE item_id = ?', (subtract,)) #Now, we check the attack and defense values from subtract (which is a ID)
+    sub_values = c1.fetchone() 
+    c1.execute('SELECT attack, defense FROM items WHERE item_id = ?', (item_id,)) #We also check the attack and defense values from the item in inventory
+    item_stats = c1.fetchone()
+    
+    if(subtract == None):
+        sub_values = (0, 0)
+
+    print(item_stats[0])
+    print(player_stats[0])
+    print(sub_values[0])
+    new_att = item_stats[0] + player_stats[0] - sub_values[0] #sub_values[0] is the current slot being swapped out, item_stats[0] is the item being insertedm player[0] is base stats
+    new_def = item_stats[1] + player_stats[1] - sub_values[1]
+
+    c.execute('UPDATE characters SET attack = ?, defense = ? WHERE user_id = ?', (new_att, new_def, user_id))
+    conn.commit()
+    conn.close()
 
 
 

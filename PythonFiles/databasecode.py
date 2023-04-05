@@ -88,39 +88,6 @@ class databasecode(commands.Cog):
                     c.execute("INSERT INTO weapons (name, rarity, damage, attack, defense, ctype, description) VALUES (?, ?, ?, ?, ?, ?, ?)", (name, rarity, damage, attack, defense, ctype, description))
         conn.commit()
 
-    def create_player_weapons_table():
-        with sqlite3.connect('player_weapons.db') as conn:
-            c = conn.cursor()
-            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='player_weapons'")
-
-            table_exists = c.fetchone() is not None
-
-            if not table_exists:
-                c.execute('''CREATE TABLE player_weapons
-                    (user_id integer, 
-                    WID integer,
-                    slot integer,
-                    PRIMARY KEY (user_id, WID, slot))''')
-                
-    def create_player_weapons_table():
-        with sqlite3.connect('accessories.db') as conn:
-            c = conn.cursor()
-            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='accessories'")
-
-            table_exists = c.fetchone() is not None
-
-            if not table_exists:
-                c.execute('''CREATE TABLE player_accessories
-                    (user_id integer, 
-                    ACID integer,
-                    slot integer,
-                    PRIMARY KEY (user_id, ACID, slot))''')
-    
-    def insert_player_weapon(user_id, WID, slot):
-        with sqlite3.connect('player_weapons.db') as conn:
-            c = conn.cursor()
-            c.execute("INSERT INTO player_weapons (user_id, WID, slot) VALUES (?, ?, ?)", (user_id, WID, slot))
-
     with sqlite3.connect('creatures.db') as conn:
         c = conn.cursor()
         c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='creatures'")

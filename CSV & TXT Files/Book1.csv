@@ -1,5 +1,5 @@
 name,rarity,damage,attack,defense,ctype,description
-Stone Sword,C,30,1,3,S,"A basic stone sword, crafted from boulders in the nearby mountains."
+Stone Sword,C,30,0,0,S,"A basic stone sword, crafted from boulders in the nearby mountains."
 Long Sword,C,50,1,4,S,Provides greater range and protection as a long iron blade provides intimidation
 Battle Axe,UC,60,1,1,S,"This axe is loyal to its owner, and will return once thrown"
 Horned Slasher,UC,80,1,4,S,This sword is crafted from the horned beasts of the mountains
@@ -8,7 +8,7 @@ Excalibur,R,100,2,7,S,A sword fitted for true royalty
 Dynastic Shield,"L""",20,3,80,S,"These shield were created in ancient times, but were lost"
 Volcan,L,180,2,4,S,"Forged from obsidian beneath an active volcano, this sword is said contain flames within"
 Sword of the Mines,L,160,1,8,S,"Forged from the deepest caves, this sword is embedded with sharp gems adding to its potent"
-Wooden Bow,C,40,2,2,A,A bow crafted from sheep wool and oak logs
+Wooden Bow,C,40,0,0,A,A bow crafted from sheep wool and oak logs
 Hunter's Bow,C,60,1,2,A,This bow belongs to the fabled hunters of the nearby kingdom
 Permafrost,UC,90,3,4,A,Arrows forged from unmeltable ice from the polar caps
 Mangrove's Soul,UC,110,1,2,A,This bow was etched from the ancient mangrove swamps
@@ -17,7 +17,7 @@ Starry Night,R,130,1,1,A,"Said to belong to an advanced alien civilization, foun
 Poisoned Dart,L,160,5,6,A,A strange pipe that carrys the most deadly poisons
 Wind Caller,L,170,4,4,A,This bow summons powerful winds that extend the power of its arrows
 Silhouette,L,180,2,1,A,"After tampering with magic, this bow is embedded with dark magic"
-Twig of Wisdom,C,20,3,1,M,"A small staff made from a simple twig, but imbued with the power of wisdom."
+Twig of Wisdom,C,20,0,0,M,"A small staff made from a simple twig, but imbued with the power of wisdom."
 Thunderbolt,C,40,2,3,M,A powerful staff that can summon bolts of lightning from the sky.
 Seer's Staff,UC,60,1,6,M,A staff that allows its wielder to see into the future and glimpse events yet to come.
 Staff of Shadows,UC,80,2,4,M,A mysterious staff that can conjure darkness and conceal its user in shadow.

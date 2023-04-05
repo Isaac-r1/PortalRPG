@@ -25,20 +25,20 @@ class game(commands.Cog):
             self.ctype = ctype
             self.WID = WID
 
-        def get_weapon_damage(WID):
-            with sqlite3.connect('weapons.db') as conn:
+        def get_weapon_damage(item_id):
+            with sqlite3.connect('items.db') as conn:
                 c = conn.cursor()
-                c.execute('SELECT damage FROM weapons WHERE WID = ?', (WID,))
+                c.execute('SELECT damage FROM items WHERE item_id = ?', (item_id,))
                 result = c.fetchone()
                 if result:
                     return result[0]
                 else:
                     return "Unknown Weapon"
                 
-        def get_weapon_name(WID):
-            with sqlite3.connect('weapons.db') as conn:
+        def get_weapon_name(item_id):
+            with sqlite3.connect('items.db') as conn:
                 c = conn.cursor()
-                c.execute('SELECT name FROM weapons WHERE WID = ?', (WID,))
+                c.execute('SELECT name FROM items WHERE item_id = ?', (item_id,))
                 result = c.fetchone()
                 if result:
                     return result[0]

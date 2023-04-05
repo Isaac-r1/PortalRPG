@@ -36,7 +36,8 @@ class Battle(commands.Cog):
 
                 scaler = random.randint(10, 15)/random.randint(10, 15)
 
-                damage = game.weapon.get_weapon_damage(player[9])  * scaler
+                print(player[9])
+                damage = int(game.weapon.get_weapon_damage(player[9]))  * scaler
                 ehp -= damage
                 ehp = int(round(ehp))
 
@@ -98,6 +99,8 @@ class Battle(commands.Cog):
 
         if(creature[1] == 0):
             Battle.loot_drop(user_id,item)
+            print(creature[7])
+            Battle.update_player(user_id, creature[7])
             await ctx.send("You win!")
         
         cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
@@ -124,10 +127,16 @@ class Battle(commands.Cog):
                 conn.commit()
                 return "Item inserted into inventory"
         return "Inventory Full"
-
+    
+    def update_player(user_id, gold):
+        conn = sqlite3.connect('characters.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM characters WHERE user_id=?', (user_id,))
+        rows = c.fetchone()
         
-        
-
+        if rows:
+            c.execute('UPDATE characters SET gold = ? WHERE user_id = ?', (rows[7] + gold, user_id))
+            conn.commit()
 
 
     def fight_status(player, creature, rarity):
@@ -145,7 +154,6 @@ class Battle(commands.Cog):
         embed.add_field(name="\u00A0Enemy HP", value=f"{creature[1]}/{creature[2]}", inline=True)
         embed.add_field(name="Weapon Slots", value=game.weapon.get_weapon_name(player[9]), inline=True)
         return embed
-
 
 
 def setup(bot):
