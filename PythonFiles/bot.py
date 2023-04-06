@@ -4,7 +4,10 @@ import sqlite3
 import csv
 import sys
 import subprocess
+import asyncio
 import time
+from discord.ui import Button
+from discord import ButtonStyle
 sys.path.append("C:\\Users\\gamin\\PortalRPG")
 from PythonFiles.config import TOKEN
 import random
@@ -13,8 +16,10 @@ from PythonFiles.databasecode import databasecode
 from PythonFiles.Battle import Battle
 from PythonFiles.Inventory import Inventory
 
+
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', case_insensitive=True, 
                    help_command=commands.DefaultHelpCommand(dm_help=False), 
@@ -22,9 +27,19 @@ bot = commands.Bot(command_prefix='!', case_insensitive=True,
 bot.case_insensitive = True
 bot.command_prefix = ['!']
 
-@bot.event
-async def setup_hook():
-    await bot.load_extension("jishaku")
+class MyButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.green, label="Click me!")
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message("You clicked the button!")
+
+@bot.command()
+async def test(ctx):
+    button = MyButton()
+    view = discord.ui.View()
+    view.add_item(button)
+    await ctx.send("Click the button below:", view=view)
 
 conn = sqlite3.connect('characters.db')
 cursor = conn.cursor()
@@ -476,10 +491,17 @@ async def restart(ctx):
 
 
 
-bot.load_extension("game")
-bot.load_extension("databasecode")
-bot.load_extension("Battle")
-bot.load_extension("Inventory")
+async def load_extensions():
+    await bot.load_extension("game")
+    await bot.load_extension("databasecode")
+    await bot.load_extension("Battle")
+    await bot.load_extension("Inventory")
 
+
+async def main():
+    await bot.login(TOKEN)
+    await bot.connect()
+    await load_extensions()
+    await bot.run()
 
 bot.run(TOKEN)

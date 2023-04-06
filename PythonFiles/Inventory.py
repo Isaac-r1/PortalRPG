@@ -8,6 +8,9 @@ from discord.ext import commands
 
 class Inventory(commands.Cog):
 
+    def __init__(self, bot):
+        self.bot = bot
+
     def get_inventory_connection():
         conn = sqlite3.connect('inventory.db')
         return conn
