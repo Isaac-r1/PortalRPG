@@ -85,10 +85,6 @@ class Battle(commands.Cog):
                 await ctx.send("You fled the encounter!")
                 cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
                 conn.commit()
-
-                # Reset the HP of the creature to their maximum HP
-                cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
-                conn1.commit()
                 break
             else:
                 await ctx.send("Invalid!")
@@ -107,10 +103,6 @@ class Battle(commands.Cog):
         
         cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
         conn.commit()
-
-        # Reset the HP of the creature to their maximum HP
-        cursor1.execute('UPDATE creatures SET HP = ? WHERE name = ?', (creature[2], creature[0]))
-        conn1.commit()
             
 
         
