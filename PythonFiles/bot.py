@@ -148,7 +148,6 @@ async def region(ctx, new_region: str):
 
 @bot.command(name = "hunt")
 @commands.cooldown(1, 3, commands.BucketType.user)
-
 async def hunt(ctx):
     user_id = ctx.message.author.id
 
@@ -360,7 +359,6 @@ async def equip_weapon(ctx, slot: int):
             conn3.commit()  # commit changes made to characters table
             await ctx.send(f"Equipped {result[1]}!")
 
-
 @bot.command()
 async def equip_accessory(ctx, slot: int):
     user_id = ctx.message.author.id
@@ -443,9 +441,6 @@ def update_player_stats(item_id, user_id, swap):
     c.execute('UPDATE characters SET attack = ?, defense = ? WHERE user_id = ?', (new_att, new_def, user_id))
     conn.commit()
     conn.close()
-
-
-
 
 @bot.command(name="weaponInfo")
 async def weaponInfo(ctx, WID: int):

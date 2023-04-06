@@ -3,6 +3,8 @@ import discord
 import sqlite3
 import csv
 import random
+from math import sqrt
+from math import floor
 from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode 
 
@@ -100,7 +102,7 @@ class Battle(commands.Cog):
         if(creature[1] == 0):
             Battle.loot_drop(user_id,item)
             print(creature[7])
-            Battle.update_player(user_id, creature[7])
+            Battle.update_player(user_id, creature[7], creature[3])
             await ctx.send("You win!")
         
         cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
@@ -128,15 +130,22 @@ class Battle(commands.Cog):
                 return "Item inserted into inventory"
         return "Inventory Full"
     
-    def update_player(user_id, gold):
+    def update_player(user_id, gold, XP):
         conn = sqlite3.connect('characters.db')
         c = conn.cursor()
         c.execute('SELECT * FROM characters WHERE user_id=?', (user_id,))
         rows = c.fetchone()
-        
+        old_level = rows[16]
+
         if rows:
             c.execute('UPDATE characters SET gold = ? WHERE user_id = ?', (rows[7] + gold, user_id))
+            c.execute('UPDATE characters SET XP = ? WHERE user_id = ?', (rows[4] + XP, user_id))
             conn.commit()
+
+            new_level = floor(0.1 * sqrt(rows[4]))
+            if(new_level > old_level):
+                c.execute('UPDATE characters SET level = ? WHERE user_id = ?', (new_level, user_id))
+                conn.commit()
 
 
     def fight_status(player, creature, rarity):
