@@ -38,8 +38,8 @@ class Battle(commands.Cog):
 
                 scaler = random.randint(10, 15)/random.randint(10, 15)
 
-                print(player[9])
-                damage = int(game.weapon.get_weapon_damage(player[9]))  * scaler
+                damage = Battle.attackScaler(user_id) * scaler
+                print(damage)
                 ehp -= damage
                 ehp = int(round(ehp))
 
@@ -105,6 +105,20 @@ class Battle(commands.Cog):
         conn.commit()
             
 
+    def attackScaler(user_id):
+        conn = sqlite3.connect('characters.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+        rows = c.fetchone()
+        level = rows[16]
+        attack = rows[6]
+        weapon_id = rows[9]
+        damage = game.weapon.get_weapon_damage(weapon_id)
+
+        print(damage) #60
+        print(level) #2
+        print(attack) #700
+        return int((damage/(21 - level)) + (level * attack * 0.5))
         
 
     def loot_drop(user_id, item):
