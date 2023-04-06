@@ -61,7 +61,7 @@ class Battle(commands.Cog):
 
                 scaler = random.randint(10, 15)/random.randint(10, 15)
                 
-                cdmg = game.CCreature.creature_damage(creature[0])*scaler
+                cdmg = game.CCreature.creature_damage(creature[0])*scaler - player[5]/3
                 php -= cdmg
                 php = int(round(php))
 
