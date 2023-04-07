@@ -7,10 +7,6 @@ import discord
 from discord.ext import commands
 
 class Inventory(commands.Cog):
-
-    def __init__(self, bot):
-        self.bot = bot
-
     def get_inventory_connection():
         conn = sqlite3.connect('inventory.db')
         return conn
@@ -40,8 +36,9 @@ class Inventory(commands.Cog):
             c = conn.cursor()
             c.execute("INSERT INTO inventory (user_id, item_id, slot) VALUES (?, ?, ?)", (user_id, item_id, slot))
     
+
     @commands.command()
-    async def inv(self, ctx):
+    async def inv(self, ctx, page:int = 1):
         user_id = ctx.message.author.id
 
         with sqlite3.connect('inventory.db') as conn:
@@ -63,15 +60,10 @@ class Inventory(commands.Cog):
                     item_name = item_row[0] if item_row is not None else "empty slot"
                     inventory_grid[slot] = item_name
 
-            embed = discord.Embed(title=f"{ctx.author}'s inventory")
-            for i in range(0, 32, 8):
-                values = [str(item)[:18] + "..." if len(str(item)) > 18 else item for item in inventory_grid[i:i+8]]
-                name = f"Slot {i+1}-{i+8}"
-                embed.add_field(name=name, value="\n".join(values), inline=False)
+            embed = discord.Embed(title=f"{ctx.author}'s inventory {page+1}-{page+8}")
+            embed.description = "\n".join([str(item)[:18] + "..." if len(str(item)) > 18 else item for item in inventory_grid[page:page+8]])
 
             await ctx.send(embed=embed)
-
-
     
                     
     @commands.command()

@@ -457,6 +457,8 @@ def update_player_stats(item_id, user_id, swap):
     conn.commit()
     conn.close()
 
+
+
 @bot.command(name="weaponInfo")
 async def weaponInfo(ctx, WID: int):
     try:
@@ -489,9 +491,8 @@ async def restart(ctx):
     await bot.close()
 
 
-
-
 async def load_extensions():
+    await bot.load_extension("jishaku")
     await bot.load_extension("game")
     await bot.load_extension("databasecode")
     await bot.load_extension("Battle")
