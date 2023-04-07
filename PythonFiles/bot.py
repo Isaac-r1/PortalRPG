@@ -27,20 +27,6 @@ bot = commands.Bot(command_prefix='!', case_insensitive=True,
 bot.case_insensitive = True
 bot.command_prefix = ['!']
 
-class MyButton(discord.ui.Button):
-    def __init__(self):
-        super().__init__(style=discord.ButtonStyle.green, label="Click me!")
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_message("You clicked the button!")
-
-@bot.command()
-async def test(ctx):
-    button = MyButton()
-    view = discord.ui.View()
-    view.add_item(button)
-    await ctx.send("Click the button below:", view=view)
-
 conn = sqlite3.connect('characters.db')
 cursor = conn.cursor()
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='characters'")
@@ -199,21 +185,52 @@ async def hunt(ctx):
         embed.add_field(name="Gold", value=creature[7], inline=True)
         await ctx.send(embed=embed)
 
-    await ctx.send("Do you wish to battle your encounter? Type Y/N")
+    battle_button = BattleButton(ctx, user_id, creature, rarity, item)
+    flee_button = FleeButton()
+    view = discord.ui.View()
+    view.add_item(battle_button)
+    view.add_item(flee_button)
+    await ctx.send("Do you wish to battle your encounter?", view=view)
 
-    def check(message):
-        return message.author == ctx.author and message.channel == ctx.channel
+class BattleButton(discord.ui.Button):
+    def __init__(self, ctx, user_id, creature, rarity, item):
+        super().__init__(style=discord.ButtonStyle.green, label="Battle")
+        self.ctx = ctx
+        self.user_id = user_id
+        self.creature = creature
+        self.rarity = rarity
+        self.item = item
+        self.clicked = False
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id == self.user_id and not self.clicked:
+            self.clicked = True
+            await Battle.fight(self.ctx, self.user_id, self.creature, self.rarity, self.item)
+
+class FleeButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.red, label="Flee")
+        self.clicked = False
     
-    while True:
-        msg = await bot.wait_for("message", check=check)
-        if msg.content.lower() == "y":
-            await Battle.fight(ctx, user_id, creature, rarity, item)
-            break
-        elif msg.content.lower() == "n":
-            await ctx.send("You fled the encounter!")
-            break
-        else:
-            await ctx.send("Invalid input. Please enter 'y' or 'n'.")
+    async def callback(self, interaction: discord.Interaction):
+        if not self.clicked:
+            self.clicked = True
+            await interaction.response.send_message("You clicked the Flee button!")
+
+
+class MyButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.green, label="Click me!")
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message("You clicked the button!")
+
+@bot.command()
+async def test(ctx):
+    button = MyButton()
+    view = discord.ui.View()
+    view.add_item(button)
+    await ctx.send("Click the button below:", view=view)
 
 @bot.command(name = "create")
 async def create(ctx, chtype: str, name: str):
@@ -492,7 +509,7 @@ async def restart(ctx):
 
 
 async def load_extensions():
-    await bot.load_extension("jishaku")
+    #await bot.load_extension("jishaku")
     await bot.load_extension("game")
     await bot.load_extension("databasecode")
     await bot.load_extension("Battle")
@@ -500,9 +517,9 @@ async def load_extensions():
 
 
 async def main():
+    await load_extensions()
     await bot.login(TOKEN)
     await bot.connect()
-    await load_extensions()
     await bot.run()
 
 if __name__ == "__main__":

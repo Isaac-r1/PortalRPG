@@ -39,6 +39,10 @@ class Inventory(commands.Cog):
 
     @commands.command()
     async def inv(self, ctx, page:int = 1):
+        if(page > 31):
+            await ctx.send("size too big")
+            return
+        
         user_id = ctx.message.author.id
 
         with sqlite3.connect('inventory.db') as conn:
