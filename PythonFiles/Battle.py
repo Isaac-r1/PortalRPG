@@ -23,6 +23,7 @@ class AttackButton(Button):
         async def callback(self, interaction: discord.Interaction):
             if interaction.user.id == self.user_id:
                 await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity)
+                await interaction.response.send_message("You clicked the Attack button!")
                 
 
 class FleeButton(Button):
@@ -43,16 +44,12 @@ class FleeButton(Button):
 
 class Battle(commands.Cog):
     
-    @classmethod
     async def turn(ctx, user_id, creature, rarity):
-        print("Line 47")
-        #conn = sqlite3.connect('characters.db')
-        cursor = connections.conn
-        
+        conn = connections.conn
+        cursor = conn.cursor()
 
-        #conn1 = sqlite3.connect('creatures.db')
-        cursor1 = connections.conn1
-        print("Line 52")
+        conn1 = connections.conn1
+        cursor1 = conn1.cursor()
 
         # Fetch player data from the database
         cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
@@ -106,22 +103,11 @@ class Battle(commands.Cog):
 
             embed = Battle.fight_status(player, creature, rarity)
             await ctx.send(embed = embed)
-    
-    def hello():
-        print("hi")
-        print("Line 47")
-        # conn = sqlite3.connect('characters.db')
-        # cursor = conn.cursor()
-
-        # conn1 = sqlite3.connect('creatures.db')
-        # cursor1 = conn1.cursor()
-        print("Line 52")
-    
-        
+            
     async def fight(ctx, user_id, creature, rarity, item):
         await ctx.send("fight program in progress")
-       # conn = sqlite3.connect('characters.db')
-        conn = connections.conn
+        conn = sqlite3.connect('characters.db')
+        #conn = connections.conn
         cursor = conn.cursor()
 
         cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
