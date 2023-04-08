@@ -14,6 +14,7 @@ import random
 from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode
 from PythonFiles.Battle import Battle
+from PythonFiles.connections import connections
 from PythonFiles.Inventory import Inventory
 
 
@@ -186,7 +187,7 @@ async def hunt(ctx):
         await ctx.send(embed=embed)
 
     battle_button = BattleButton(ctx, user_id, creature, rarity, item)
-    flee_button = FleeButton()
+    flee_button = FleeButton(user_id)
     view = discord.ui.View()
     view.add_item(battle_button)
     view.add_item(flee_button)
@@ -208,12 +209,13 @@ class BattleButton(discord.ui.Button):
             await Battle.fight(self.ctx, self.user_id, self.creature, self.rarity, self.item)
 
 class FleeButton(discord.ui.Button):
-    def __init__(self):
+    def __init__(self,user_id):
         super().__init__(style=discord.ButtonStyle.red, label="Flee")
         self.clicked = False
+        self.user_id = user_id
     
     async def callback(self, interaction: discord.Interaction):
-        if not self.clicked:
+        if interaction.user.id == self.user_id and not self.clicked:
             self.clicked = True
             await interaction.response.send_message("You clicked the Flee button!")
 

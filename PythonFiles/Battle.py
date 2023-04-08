@@ -3,21 +3,126 @@ import discord
 import sqlite3
 import csv
 import random
+from discord.ui import Button
+from discord import ButtonStyle
 from math import sqrt
 from math import floor
+from PythonFiles.connections import connections
 from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode 
 
-class Battle(commands.Cog):
-    async def fight(ctx, user_id, creature, rarity, item):
-        await ctx.send("fight program in progress")
-        conn = sqlite3.connect('characters.db')
-        cursor = conn.cursor()
+class AttackButton(Button):
+        def __init__(self, ctx, user_id, creature, rarity, item):
+            super().__init__(style=ButtonStyle.green, label="Attack")
+            self.ctx = ctx
+            self.user_id = user_id
+            self.creature = creature
+            self.rarity = rarity
+            self.item = item
 
-        conn1 = sqlite3.connect('creatures.db')
-        cursor1 = conn1.cursor()
+        async def callback(self, interaction: discord.Interaction):
+            if interaction.user.id == self.user_id:
+                await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity)
+                
+
+class FleeButton(Button):
+        def __init__(self, user_id):
+            super().__init__(style=ButtonStyle.red, label="Flee")
+            self.user_id = user_id
+
+        async def callback(self, interaction: discord.Interaction):
+            if interaction.user.id == self.user_id:
+                await interaction.response.send_message("You fled the encounter!")
+                conn = sqlite3.connect('characters.db')
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM characters WHERE user_id = ?', (self.user_id,))
+                player = cursor.fetchone()
+                if player:
+                    cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[2], self.user_id))
+                    conn.commit()
+
+class Battle(commands.Cog):
+    
+    @classmethod
+    async def turn(ctx, user_id, creature, rarity):
+        print("Line 47")
+        #conn = sqlite3.connect('characters.db')
+        cursor = connections.conn
+        
+
+        #conn1 = sqlite3.connect('creatures.db')
+        cursor1 = connections.conn1
+        print("Line 52")
+
+        # Fetch player data from the database
+        cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+        player = cursor.fetchone()
 
         cmax_hp = creature[2]
+        ehp = creature[1]
+
+        while player[2] > 0 and creature[1] > 0:
+            scaler = random.randint(10, 15)/random.randint(10, 15)
+
+            damage = Battle.attackScaler(user_id) * scaler
+            print(damage)
+            ehp -= damage
+            ehp = int(round(ehp))
+
+            if(ehp < 0):
+                ehp = 0
+
+            cursor1.execute('UPDATE creatures SET HP = ?, max_hp = ? WHERE name = ?', (ehp, cmax_hp, creature[0]))
+            conn1.commit()
+
+            # Fetch updated creature values from the database
+            cursor1.execute('SELECT * FROM creatures WHERE name = ?', (creature[0],))
+            creature = cursor1.fetchone()
+
+            if(ehp <= 0):
+                return
+
+            await ctx.send("You attacked the enemy")
+            php = player[2]
+
+            scaler = random.randint(10, 15)/random.randint(10, 15)
+                            
+            cdmg = game.CCreature.creature_damage(creature[0])*scaler - player[5]/3
+            php -= cdmg
+            php = int(round(php))
+
+            if(php < 0):
+                php = 0
+
+            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (php, user_id))
+            conn.commit()
+
+            # Fetch updated player values from the database
+            cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+            player = cursor.fetchone()
+
+            if(php <= 0):
+                return
+
+            embed = Battle.fight_status(player, creature, rarity)
+            await ctx.send(embed = embed)
+    
+    def hello():
+        print("hi")
+        print("Line 47")
+        # conn = sqlite3.connect('characters.db')
+        # cursor = conn.cursor()
+
+        # conn1 = sqlite3.connect('creatures.db')
+        # cursor1 = conn1.cursor()
+        print("Line 52")
+    
+        
+    async def fight(ctx, user_id, creature, rarity, item):
+        await ctx.send("fight program in progress")
+       # conn = sqlite3.connect('characters.db')
+        conn = connections.conn
+        cursor = conn.cursor()
 
         cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
         player = cursor.fetchone()
@@ -26,71 +131,13 @@ class Battle(commands.Cog):
         embed = embed
         await ctx.send(embed = embed)
 
-        while(player[2] > 0 and creature[1] > 0):
-            await ctx.send("Do you plan to attack or flee? type A or F")
-
-            def check(message):
-                return message.author == ctx.author and message.channel == ctx.channel
-            
-            msg = await ctx.bot.wait_for("message", check=check)
-            if(msg.content.lower() == "a"):
-                ehp = creature[1]
-
-                scaler = random.randint(10, 15)/random.randint(10, 15)
-
-                damage = Battle.attackScaler(user_id) * scaler
-                print(damage)
-                ehp -= damage
-                ehp = int(round(ehp))
-
-                if(ehp < 0):
-                    ehp = 0
-
-                cursor1.execute('UPDATE creatures SET HP = ?, max_hp = ? WHERE name = ?', (ehp, cmax_hp, creature[0]))
-                conn1.commit()
-
-                # Fetch updated creature values from the database
-                cursor1.execute('SELECT * FROM creatures WHERE name = ?', (creature[0],))
-                creature = cursor1.fetchone()
-
-                if(ehp <= 0):
-                    break
-
-                await ctx.send("You attacked the enemy")
-                php = player[2]
-
-                scaler = random.randint(10, 15)/random.randint(10, 15)
+        attack_button = AttackButton(ctx, user_id, creature, rarity, item)
+        flee_button = FleeButton(user_id)
+        view = discord.ui.View()
+        view.add_item(attack_button)
+        view.add_item(flee_button)
+        await ctx.send("Do you plan to attack or flee?", view=view)
                 
-                cdmg = game.CCreature.creature_damage(creature[0])*scaler - player[5]/3
-                php -= cdmg
-                php = int(round(php))
-
-                if(php < 0):
-                    php = 0
-
-                cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (php, user_id))
-                conn.commit()
-
-                # Fetch updated player values from the database
-                cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
-                player = cursor.fetchone()
-
-                if(php <= 0):
-                    break
-
-                embed = Battle.fight_status(player, creature, rarity)
-                await ctx.send(embed = embed)
-                
-            elif(msg.content.lower() == "f"):
-                await ctx.send("You fled the encounter!")
-                cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-                conn.commit()
-                break
-            else:
-                await ctx.send("Invalid!")
-        
-        embed = Battle.fight_status(player, creature, rarity)
-        await ctx.send(embed = embed)
             
         if(player[2] == 0):
             await ctx.send("You died!")
@@ -103,7 +150,7 @@ class Battle(commands.Cog):
         
         cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
         conn.commit()
-            
+        conn.close()
 
     def attackScaler(user_id):
         conn = sqlite3.connect('characters.db')
@@ -115,12 +162,8 @@ class Battle(commands.Cog):
         weapon_id = rows[9]
         damage = game.weapon.get_weapon_damage(weapon_id)
 
-        print(damage) #60
-        print(level) #2
-        print(attack) #700
         return int((damage/(21 - level)) + (level * attack * 0.5))
         
-
     def loot_drop(user_id, item):
         conn = sqlite3.connect('inventory.db')
         c = conn.cursor()
@@ -152,7 +195,6 @@ class Battle(commands.Cog):
             if(new_level > old_level):
                 c.execute('UPDATE characters SET level = ? WHERE user_id = ?', (new_level, user_id))
                 conn.commit()
-
 
     def fight_status(player, creature, rarity):
 
