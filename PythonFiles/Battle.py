@@ -12,18 +12,18 @@ from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode 
 
 class AttackButton(Button):
-        def __init__(self, ctx, user_id, creature, rarity, item):
+        def __init__(self, ctx, user_id, creature, rarity, item, message):
             super().__init__(style=ButtonStyle.green, label="Attack")
             self.ctx = ctx
             self.user_id = user_id
             self.creature = creature
             self.rarity = rarity
             self.item = item
+            self.message = message
 
         async def callback(self, interaction: discord.Interaction):
             if interaction.user.id == self.user_id:
-                await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity)
-                await interaction.response.send_message("You clicked the Attack button!")
+                await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message)
                 
 
 class FleeButton(Button):
@@ -44,7 +44,7 @@ class FleeButton(Button):
 
 class Battle(commands.Cog):
     
-    async def turn(ctx, user_id, creature, rarity):
+    async def turn(ctx, user_id, creature, rarity, item, message):
         conn = connections.conn
         cursor = conn.cursor()
 
@@ -58,7 +58,23 @@ class Battle(commands.Cog):
         cmax_hp = creature[2]
         ehp = creature[1]
 
-        while player[2] > 0 and creature[1] > 0:
+        if(player[2] == 0):
+            await ctx.send("You died!")
+            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+            conn.commit()
+        if(creature[1] == 0):
+            Battle.loot_drop(user_id, item)
+            print(creature[7])
+            Battle.update_player(user_id, creature[7], creature[3])
+            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+            conn.commit()
+            await ctx.send("You win!")
+        
+                
+        
+            
+
+        if player[2] > 0 and creature[1] > 0:
             scaler = random.randint(10, 15)/random.randint(10, 15)
 
             damage = Battle.attackScaler(user_id) * scaler
@@ -76,10 +92,11 @@ class Battle(commands.Cog):
             cursor1.execute('SELECT * FROM creatures WHERE name = ?', (creature[0],))
             creature = cursor1.fetchone()
 
+            embed = Battle.fight_status(player, creature, rarity)
+            await message.edit(content="Do you plan to attack or flee?", embed=embed)
+
             if(ehp <= 0):
                 return
-
-            await ctx.send("You attacked the enemy")
             php = player[2]
 
             scaler = random.randint(10, 15)/random.randint(10, 15)
@@ -98,11 +115,13 @@ class Battle(commands.Cog):
             cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
             player = cursor.fetchone()
 
+            embed = Battle.fight_status(player, creature, rarity)
+            await message.edit(content="Do you plan to attack or flee?", embed=embed)
+
             if(php <= 0):
                 return
+        
 
-            embed = Battle.fight_status(player, creature, rarity)
-            await ctx.send(embed = embed)
             
     async def fight(ctx, user_id, creature, rarity, item):
         await ctx.send("fight program in progress")
@@ -115,28 +134,15 @@ class Battle(commands.Cog):
 
         embed = Battle.fight_status(player, creature, rarity)
         embed = embed
-        await ctx.send(embed = embed)
+        message = await ctx.send(embed=embed)
 
-        attack_button = AttackButton(ctx, user_id, creature, rarity, item)
+        attack_button = AttackButton(ctx, user_id, creature, rarity, item, message)
         flee_button = FleeButton(user_id)
         view = discord.ui.View()
         view.add_item(attack_button)
         view.add_item(flee_button)
         await ctx.send("Do you plan to attack or flee?", view=view)
                 
-            
-        if(player[2] == 0):
-            await ctx.send("You died!")
-
-        if(creature[1] == 0):
-            Battle.loot_drop(user_id,item)
-            print(creature[7])
-            Battle.update_player(user_id, creature[7], creature[3])
-            await ctx.send("You win!")
-        
-        cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-        conn.commit()
-        conn.close()
 
     def attackScaler(user_id):
         conn = sqlite3.connect('characters.db')
