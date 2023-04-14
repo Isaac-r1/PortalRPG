@@ -111,6 +111,26 @@ class databasecode(commands.Cog):
             for row in reader:
                 c.execute("INSERT INTO Creatures (name, HP, max_HP, XP, defense, damage, attack, gold, Biome, diff) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
 
+    with sqlite3.connect('activecreatures.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='activecreatures'")
+        if c.fetchone() is None:
+            c.execute('''CREATE TABLE activecreatures(
+                name text,
+                HP integer,
+                max_HP integer,
+                XP integer,
+                defense integer,
+                damage integer,
+                attack integer,
+                gold integer,
+                Biome text,
+                diff integer,
+                CID integer PRIMARY KEY AUTOINCREMENT
+            )''')
+
+
+
 # create a new database to hold the merged data
     with sqlite3.connect('items.db') as conn:
         c = conn.cursor()

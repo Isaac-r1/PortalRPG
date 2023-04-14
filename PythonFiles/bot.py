@@ -152,7 +152,6 @@ async def region(ctx, new_region: str):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def hunt(ctx):
     user_id = ctx.message.author.id
-
     if game.Character.getRegion(user_id) is None:
         await ctx.send("Enter a region!")
         raise commands.CommandError("Invalid region")
@@ -174,6 +173,8 @@ async def hunt(ctx):
         ctitle = "Common"
 
     creature, item = game.CCreature.spawnCreature(region, level, rarity)
+
+    print(creature[10])
 
     await ctx.send("An encounter has spawned!")
     if creature:

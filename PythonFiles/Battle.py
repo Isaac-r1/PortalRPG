@@ -39,7 +39,7 @@ class FleeButton(Button):
                 cursor.execute('SELECT * FROM characters WHERE user_id = ?', (self.user_id,))
                 player = cursor.fetchone()
                 if player:
-                    cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[2], self.user_id))
+                    cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (100, self.user_id))
                     conn.commit()
 
 class Battle(commands.Cog):
@@ -48,15 +48,15 @@ class Battle(commands.Cog):
         conn = connections.conn
         cursor = conn.cursor()
 
-        conn1 = connections.conn1
-        cursor1 = conn1.cursor()
+        conn_activecreatures = sqlite3.connect('activecreatures.db')
+        cursor_activecreatures = conn_activecreatures.cursor()
 
         # Fetch player data from the database
         cursor.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
         player = cursor.fetchone()
 
-        cmax_hp = creature[2]
-        ehp = creature[1]
+        cursor_activecreatures.execute('SELECT * FROM activecreatures WHERE CID = ?', (creature[10],))
+        creature = cursor_activecreatures.fetchone()
 
         if(player[2] == 0):
             await ctx.send("You died!")
@@ -70,27 +70,25 @@ class Battle(commands.Cog):
             conn.commit()
             await ctx.send("You win!")
         
-                
-        
-            
+        cmax_hp = creature[2]
+        ehp = creature[1]
 
         if player[2] > 0 and creature[1] > 0:
             scaler = random.randint(10, 15)/random.randint(10, 15)
 
             damage = Battle.attackScaler(user_id) * scaler
-            print(damage)
             ehp -= damage
             ehp = int(round(ehp))
 
             if(ehp < 0):
                 ehp = 0
 
-            cursor1.execute('UPDATE creatures SET HP = ?, max_hp = ? WHERE name = ?', (ehp, cmax_hp, creature[0]))
-            conn1.commit()
+            cursor_activecreatures.execute('UPDATE activecreatures SET HP = ?, max_hp = ? WHERE name = ?', (ehp, cmax_hp, creature[0]))
+            conn_activecreatures.commit()
 
             # Fetch updated creature values from the database
-            cursor1.execute('SELECT * FROM creatures WHERE name = ?', (creature[0],))
-            creature = cursor1.fetchone()
+            cursor_activecreatures.execute('SELECT * FROM activecreatures WHERE CID = ?', (creature[10],))
+            creature = cursor_activecreatures.fetchone()
 
             embed = Battle.fight_status(player, creature, rarity)
             await message.edit(content="Do you plan to attack or flee?", embed=embed)
@@ -100,8 +98,11 @@ class Battle(commands.Cog):
             php = player[2]
 
             scaler = random.randint(10, 15)/random.randint(10, 15)
-                            
-            cdmg = game.CCreature.creature_damage(creature[0])*scaler - player[5]/3
+
+
+            print(creature[10])                
+            cdmg = game.CCreature.creature_damage(creature[10])*scaler - player[5]/2
+            print(cdmg)
             php -= cdmg
             php = int(round(php))
 

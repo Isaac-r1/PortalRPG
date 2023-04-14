@@ -179,13 +179,13 @@ class game(commands.Cog):
             conn = sqlite3.connect('creatures.db')
             c = conn.cursor()
             if level < 3:
-                c.execute("SELECT * FROM Creatures WHERE diff<3 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<3 AND biome=?", (pbiome,))
             elif level < 5:
-                c.execute("SELECT * FROM Creatures WHERE diff<4 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<4 AND biome=?", (pbiome,))
             elif level < 8:
-                c.execute("SELECT * FROM Creatures WHERE diff<5 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<5 AND biome=?", (pbiome,))
             else:
-                c.execute("SELECT * FROM Creatures WHERE diff<=5 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<=5 AND biome=?", (pbiome,))
             results = c.fetchall()
             if not results:
                 return None
@@ -194,7 +194,7 @@ class game(commands.Cog):
             damage = game.CCreature.rarity_scaling(creature[5], rarity)
             defense = game.CCreature.rarity_scaling(creature[4], rarity)
             gold = game.CCreature.rarity_scaling(creature[7], rarity)
-            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], int(defense), int(damage), creature[6], int(gold), creature[2], creature[9])
+            new_creature = (creature[0], int(max_hp), int(max_hp), creature[3], int(defense), int(damage), creature[6], int(gold), creature[8], creature[9])
 
             item_rarity = game.weapon.random_rarity()
             conn1 = sqlite3.connect('items.db')
@@ -205,12 +205,22 @@ class game(commands.Cog):
                 return None
             item = random.choice(iresults)
 
-            return (new_creature, item)
+            conn_activecreatures = sqlite3.connect('activecreatures.db')
+            c2 = conn_activecreatures.cursor()
+            #print(new_creature)
+            c2.execute("INSERT INTO activecreatures (name, HP, max_HP, XP, defense, damage, attack, gold, Biome, diff) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (*new_creature,))
+            conn_activecreatures.commit()
+            #print("here")
 
-        def creature_damage(name):
-            with sqlite3.connect('creatures.db') as conn:
+            c2.execute("SELECT * FROM activecreatures ORDER BY CID DESC LIMIT 1")
+            active_creature = c2.fetchone()
+
+            return (active_creature, item)
+
+        def creature_damage(CID):
+            with sqlite3.connect('activecreatures.db') as conn:
                 c = conn.cursor()
-                c.execute('SELECT damage FROM creatures WHERE name = ?', (name,))
+                c.execute('SELECT damage FROM activecreatures WHERE CID = ?', (CID,))
                 result = c.fetchone()
                 if result:
                     return result[0]
