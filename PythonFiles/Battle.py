@@ -23,7 +23,8 @@ class AttackButton(Button):
 
         async def callback(self, interaction: discord.Interaction):
             if interaction.user.id == self.user_id:
-                await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message)
+                return await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message)
+
                 
 
 class FleeButton(Button):
@@ -33,7 +34,6 @@ class FleeButton(Button):
 
         async def callback(self, interaction: discord.Interaction):
             if interaction.user.id == self.user_id:
-                await interaction.response.send_message("You fled the encounter!")
                 conn = sqlite3.connect('characters.db')
                 cursor = conn.cursor()
                 cursor.execute('SELECT * FROM characters WHERE user_id = ?', (self.user_id,))
@@ -41,6 +41,7 @@ class FleeButton(Button):
                 if player:
                     cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (100, self.user_id))
                     conn.commit()
+                return await interaction.response.send_message("You fled the encounter!")
 
 class Battle(commands.Cog):
     
@@ -58,18 +59,6 @@ class Battle(commands.Cog):
         cursor_activecreatures.execute('SELECT * FROM activecreatures WHERE CID = ?', (creature[10],))
         creature = cursor_activecreatures.fetchone()
 
-        if(player[2] == 0):
-            await ctx.send("You died!")
-            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-            conn.commit()
-        if(creature[1] == 0):
-            Battle.loot_drop(user_id, item)
-            print(creature[7])
-            Battle.update_player(user_id, creature[7], creature[3])
-            cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
-            conn.commit()
-            await ctx.send("You win!")
-        
         cmax_hp = creature[2]
         ehp = creature[1]
 
@@ -94,15 +83,19 @@ class Battle(commands.Cog):
             await message.edit(content="Do you plan to attack or flee?", embed=embed)
 
             if(ehp <= 0):
+                if(creature[1] == 0):
+                    Battle.loot_drop(user_id, item)
+                    print(creature[7])
+                    Battle.update_player(user_id, creature[7], creature[3])
+                    cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+                    conn.commit()
+                    await ctx.send("You win!")
                 return
             php = player[2]
 
             scaler = random.randint(10, 15)/random.randint(10, 15)
-
-
-            print(creature[10])                
+        
             cdmg = game.CCreature.creature_damage(creature[10])*scaler - player[5]/2
-            print(cdmg)
             php -= cdmg
             php = int(round(php))
 
@@ -120,6 +113,10 @@ class Battle(commands.Cog):
             await message.edit(content="Do you plan to attack or flee?", embed=embed)
 
             if(php <= 0):
+                if(player[2] == 0):
+                    await ctx.send("You died!")
+                    cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
+                    conn.commit()
                 return
         
 
