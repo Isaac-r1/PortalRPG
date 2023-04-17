@@ -137,7 +137,7 @@ class databasecode(commands.Cog):
 
         c.execute("SELECT name from sqlite_master WHERE type='table' AND name = 'items'")
         if c.fetchone() is None:
-        # create the items table with an auto-incrementing primary key
+            # create the items table with an auto-incrementing primary key
             c.execute('''CREATE TABLE items(
                 item_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
@@ -157,20 +157,25 @@ class databasecode(commands.Cog):
 
         # insert data from the original databases into the items table,
         # using unique auto-incrementing item_id values
-        c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
-            SELECT name, 'weapon', rarity, damage, attack, defense, description, ctype
-            FROM weapons.weapons''')
+        c.execute('''SELECT COUNT(*) FROM items WHERE type = 'weapon' AND name IN (SELECT name FROM weapons.weapons)''')
+        if c.fetchone()[0] == 0:
+            c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
+                SELECT name, 'weapon', rarity, damage, attack, defense, description, ctype
+                FROM weapons.weapons''')
 
-        c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
-            SELECT name, 'armor', rarity, 0, attack, defense, description, ctype
-            FROM armor.armor''')
+        c.execute('''SELECT COUNT(*) FROM items WHERE type = 'armor' AND name IN (SELECT name FROM armor.armor)''')
+        if c.fetchone()[0] == 0:
+            c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
+                SELECT name, 'armor', rarity, 0, attack, defense, description, ctype
+                FROM armor.armor''')
 
-        c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
-            SELECT name, 'accessory', rarity, 0, attack, defense, description, ''
-            FROM accessories.accessories''')
+        c.execute('''SELECT COUNT(*) FROM items WHERE type = 'accessory' AND name IN (SELECT name FROM accessories.accessories)''')
+        if c.fetchone()[0] == 0:
+            c.execute('''INSERT INTO items (name, type, rarity, damage, attack, defense, description, ctype)
+                SELECT name, 'accessory', rarity, 0, attack, defense, description, ''
+                FROM accessories.accessories''')
 
-    # commit the changes
-    conn.commit()
+        conn.commit()
 
 async def setup(bot):
     await bot.add_cog(databasecode())

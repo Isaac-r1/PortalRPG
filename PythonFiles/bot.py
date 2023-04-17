@@ -423,24 +423,23 @@ async def equip_accessory(ctx, slot: int):
         c3.execute('SELECT accessory FROM characters WHERE user_id = ?', (user_id,))
         old_accessory = c3.fetchone()[0]
         if old_accessory:
+            update_player_stats(item_id,user_id, "swapAC")
             # Remove equipped accessory and add it to the user's inventory
             c.execute('UPDATE inventory SET item_id = ? WHERE user_id = ? AND slot = ?', (old_accessory, user_id, slot))
             conn.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
-            update_player_stats(item_id,user_id, "swapAC")
             await ctx.send(f"Swapped {result[1]} with {old_accessory}.")
         else:
+            update_player_stats(item_id,user_id, None)
             # Equip the accessory and display the name
             c.execute('UPDATE inventory SET item_id = NULL WHERE user_id = ? AND slot = ?', (user_id, slot))
             conn.commit()  # commit changes made to inventory table
             c3.execute('UPDATE characters SET accessory = ? WHERE user_id = ?', (item_id, user_id))
             conn3.commit()  # commit changes made to characters table
-            update_player_stats(item_id,user_id, None)
             await ctx.send(f"Equipped {result[1]}!")
 
 def update_player_stats(item_id, user_id, swap):
-    print(item_id)
     conn = sqlite3.connect('characters.db')
     c = conn.cursor()
     c.execute('SELECT attack, defense FROM characters WHERE user_id = ?', (user_id,))
@@ -450,10 +449,11 @@ def update_player_stats(item_id, user_id, swap):
     active_stats = c.fetchone() #This is checking the current weapon, armor, accessory slots if they're full
     if(swap == "swapW"):
         subtract = active_stats[0] #if we're swapping a weapon, we set subtract as the WID
-    elif(swap == "swapA"): 
+    elif(swap == "swapA"):
         subtract = active_stats[1] #if armor, subtract = AID
     elif(swap == "swapAC"):
         subtract = active_stats[2] #if accessory, subtract = ACID
+        print(subtract)
     else:
         subtract = None #if we're just inserting an item, subtract is jsut none
 
@@ -467,9 +467,11 @@ def update_player_stats(item_id, user_id, swap):
     if(subtract == None):
         sub_values = (0, 0)
 
+    print(subtract)
     print(item_stats[0])
     print(player_stats[0])
     print(sub_values[0])
+
     new_att = item_stats[0] + player_stats[0] - sub_values[0] #sub_values[0] is the current slot being swapped out, item_stats[0] is the item being insertedm player[0] is base stats
     new_def = item_stats[1] + player_stats[1] - sub_values[1]
 

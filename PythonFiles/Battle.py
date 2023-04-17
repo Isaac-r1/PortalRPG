@@ -28,20 +28,22 @@ class AttackButton(Button):
                 
 
 class FleeButton(Button):
-        def __init__(self, user_id):
-            super().__init__(style=ButtonStyle.red, label="Flee")
-            self.user_id = user_id
+    def __init__(self, user_id):
+        super().__init__(style=ButtonStyle.red, label="Flee")
+        self.user_id = user_id
 
-        async def callback(self, interaction: discord.Interaction):
-            if interaction.user.id == self.user_id:
-                conn = sqlite3.connect('characters.db')
-                cursor = conn.cursor()
-                cursor.execute('SELECT * FROM characters WHERE user_id = ?', (self.user_id,))
-                player = cursor.fetchone()
-                if player:
-                    cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (100, self.user_id))
-                    conn.commit()
-                return await interaction.response.send_message("You fled the encounter!")
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id == self.user_id:
+            conn = sqlite3.connect('characters.db')
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM characters WHERE user_id = ?', (self.user_id,))
+            player = cursor.fetchone()
+            if player:
+                cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (100, self.user_id))
+                conn.commit()
+            await interaction.response.send_message("You fled the encounter!")
+            await interaction.message.delete()
+            
 
 class Battle(commands.Cog):
     
@@ -152,7 +154,7 @@ class Battle(commands.Cog):
         weapon_id = rows[9]
         damage = game.weapon.get_weapon_damage(weapon_id)
 
-        return int((damage/(21 - level)) + (level * attack * 0.5))
+        return int((damage) + (level + attack * 0.5))
         
     def loot_drop(user_id, item):
         conn = sqlite3.connect('inventory.db')

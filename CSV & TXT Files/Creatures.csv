@@ -1,7 +1,7 @@
 Name,HP,max_HP,XP,defense,damage,attack,gold,Biome,diff
 🦇 Vampire Bat,50,50,10,5,20,0,2,swamp,1
 🐸 Goliath Frog,100,100,50,30,10,0,5,swamp,2
-🐗 Warthog,200,200,100,25,0,60,8,swamp,3
+🐗 Warthog,200,200,100,25,60,0,8,swamp,3
 🐍 Anaconda,500,500,150,35,80,0,13,swamp,4
 🐊 Crocodile,1000,1000,200,110,40,0,21,swamp,5
 🦡 Badger,50,50,10,5,20,0,2,mountain,1
