@@ -70,6 +70,16 @@ def Wchoice(chtype, user_id):
 @bot.command(name = "mode")
 async def mode(ctx, new_mode: str):
     user_id = ctx.message.author.id
+
+    with sqlite3.connect('characters.db') as cconn:
+            cc = cconn.cursor()
+            cc.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+            rows = cc.fetchall()
+
+            if not rows:
+                await ctx.send("Create a new character with `!create`")
+                return
+
     if not (new_mode.lower() == "adventure" or new_mode.lower() == "athome"):
         await ctx.send("invalid mode")
         raise commands.CommandError("invalid mode!")
@@ -137,6 +147,15 @@ async def uid(ctx, member: discord.Member):
 async def region(ctx, new_region: str):
     user_id = ctx.message.author.id
 
+    with sqlite3.connect('characters.db') as cconn:
+            cc = cconn.cursor()
+            cc.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+            rows = cc.fetchall()
+
+            if not rows:
+                await ctx.send("Create a new character with `!create`")
+                return
+
     if game.Character.getMode(user_id) != "ADVENTURE":
         await ctx.send("Change your mode to ADVENTURE!")
         raise commands.CommandError("Invalid mode")
@@ -152,6 +171,16 @@ async def region(ctx, new_region: str):
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def hunt(ctx):
     user_id = ctx.message.author.id
+
+    with sqlite3.connect('characters.db') as cconn:
+            cc = cconn.cursor()
+            cc.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+            rows = cc.fetchall()
+
+            if not rows:
+                await ctx.send("Create a new character with `!create`")
+                return
+
     if game.Character.getRegion(user_id) is None:
         await ctx.send("Enter a region!")
         raise commands.CommandError("Invalid region")
@@ -187,12 +216,15 @@ async def hunt(ctx):
         embed.add_field(name="Gold", value=creature[7], inline=True)
         await ctx.send(embed=embed)
 
+
+    
     battle_button = BattleButton(ctx, user_id, creature, rarity, item)
     flee_button = FleeButton(user_id)
     view = discord.ui.View()
     view.add_item(battle_button)
     view.add_item(flee_button)
     await ctx.send("Do you wish to battle your encounter?", view=view)
+    
 
 class BattleButton(discord.ui.Button):
     def __init__(self, ctx, user_id, creature, rarity, item):
@@ -208,6 +240,7 @@ class BattleButton(discord.ui.Button):
         if interaction.user.id == self.user_id and not self.clicked:
             self.clicked = True
             await Battle.fight(self.ctx, self.user_id, self.creature, self.rarity, self.item)
+            await interaction.response.defer()
 
 class FleeButton(discord.ui.Button):
     def __init__(self,user_id):
@@ -235,10 +268,16 @@ async def test(ctx):
     view.add_item(button)
     await ctx.send("Click the button below:", view=view)
 
+
 @bot.command(name = "create")
-async def create(ctx, chtype: str, name: str):
+async def create(ctx, chtype: str = None, name: str = None):
     user_id = ctx.message.author.id
     
+    if chtype == None or name == None:
+        await ctx.send("To create a new character, enter this: !create class name")
+        await ctx.send("The three classes are: mage, archer, swordsman. You can name your character anything!")
+        return
+
     if not (chtype == "mage" or chtype == "archer" or chtype == "swordsman"):
         
         await ctx.send("please pick one of the three following classes: mage, archer, swordsman then provide a name!")

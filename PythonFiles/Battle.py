@@ -23,7 +23,9 @@ class AttackButton(Button):
 
         async def callback(self, interaction: discord.Interaction):
             if interaction.user.id == self.user_id:
+                await interaction.response.defer()
                 return await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message)
+                
 
                 
 

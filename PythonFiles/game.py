@@ -181,11 +181,11 @@ class game(commands.Cog):
             if level < 3:
                 c.execute("SELECT * FROM creatures WHERE diff<3 AND biome=?", (pbiome,))
             elif level < 5:
-                c.execute("SELECT * FROM creatures WHERE diff<4 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<4 AND diff>=2 AND biome=?", (pbiome,))
             elif level < 8:
-                c.execute("SELECT * FROM creatures WHERE diff<5 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<5 AND diff>=3 AND biome=?", (pbiome,))
             else:
-                c.execute("SELECT * FROM creatures WHERE diff<=5 AND biome=?", (pbiome,))
+                c.execute("SELECT * FROM creatures WHERE diff<=5 AND diff>=4 AND biome=?", (pbiome,))
             results = c.fetchall()
             if not results:
                 return None
@@ -221,7 +221,7 @@ class game(commands.Cog):
             with sqlite3.connect('activecreatures.db') as conn:
                 c = conn.cursor()
                 c.execute('SELECT damage FROM activecreatures WHERE CID = ?', (CID,))
-                result = c.fetchone()
+                result = c.fetchone() 
                 if result:
                     return result[0]
                 else:

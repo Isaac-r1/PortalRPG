@@ -45,6 +45,15 @@ class Inventory(commands.Cog):
         
         user_id = ctx.message.author.id
 
+        with sqlite3.connect('characters.db') as cconn:
+            cc = cconn.cursor()
+            cc.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
+            rows = cc.fetchall()
+
+            if not rows:
+                await ctx.send("Create a new character with `!create`")
+                return
+
         with sqlite3.connect('inventory.db') as conn:
             c = conn.cursor()
             c.execute('SELECT * FROM inventory WHERE user_id = ?', (user_id,))
