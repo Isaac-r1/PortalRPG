@@ -1,0 +1,6 @@
+name,healing,damage,dodge,attB,defB,gold,stack
+Elixir of Vitality,30,0,0,0,0,50,6
+Flask of Thunder,0,20,0,0,0,40,6
+Mighty Draught,0,0,0,10,0,40,3
+Vial of the Wind,0,0,20,0,0,50,3
+Potion of Fortitude,0,0,0,0,10,50,3

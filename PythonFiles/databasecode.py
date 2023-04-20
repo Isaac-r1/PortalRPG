@@ -176,6 +176,32 @@ class databasecode(commands.Cog):
                 FROM accessories.accessories''')
 
         conn.commit()
+    
+    with sqlite3.connect('consumables.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='consumables'")
+        if c.fetchone() is None:
+            c.execute('''CREATE TABLE consumables(
+                PID INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                healing INTEGER,
+                damage INTEGER,
+                dodge INTEGER,
+                attB INTEGER,
+                defB INTEGER,
+                gold INTEGER,
+                stack INTEGER
+            )''')
+        
+        with open('CSV & TXT Files/Potions.csv', newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            next(reader) # skip header row
+            for row in reader:
+                c.execute("SELECT * FROM consumables WHERE PID = ? AND name = ?", (row[0], row[1]))
+                existing_row = c.fetchone()
+                if not existing_row:
+                    c.execute("INSERT INTO consumables (name, healing, damage, dodge, attB, defB, gold, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
+        
 
 async def setup(bot):
     await bot.add_cog(databasecode())

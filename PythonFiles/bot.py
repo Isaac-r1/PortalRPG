@@ -16,6 +16,7 @@ from PythonFiles.databasecode import databasecode
 from PythonFiles.Battle import Battle
 from PythonFiles.connections import connections
 from PythonFiles.Inventory import Inventory
+from PythonFiles.Potions import Potions
 
 
 intents = discord.Intents.default()
@@ -70,16 +71,6 @@ def Wchoice(chtype, user_id):
 @bot.command(name = "mode")
 async def mode(ctx, new_mode: str):
     user_id = ctx.message.author.id
-
-    with sqlite3.connect('characters.db') as cconn:
-            cc = cconn.cursor()
-            cc.execute('SELECT * FROM characters WHERE user_id = ?', (user_id,))
-            rows = cc.fetchall()
-
-            if not rows:
-                await ctx.send("Create a new character with `!create`")
-                return
-
     if not (new_mode.lower() == "adventure" or new_mode.lower() == "athome"):
         await ctx.send("invalid mode")
         raise commands.CommandError("invalid mode!")
@@ -93,6 +84,39 @@ async def mode(ctx, new_mode: str):
     
     game.Character.changeMode(new_mode.upper(), user_id)
     await ctx.send("Mode changed to " + new_mode.upper() + "!")
+
+
+@bot.command()
+@commands.is_owner()
+async def c_insert(ctx, member: discord.Member, PID: int, slot: int):
+    with sqlite3.connect('consumables.db') as conn1: 
+        try:
+            c1 = conn1.cursor()
+            c1.execute("SELECT * FROM consumables WHERE PID = ?", (PID,))
+            rows = c1.fetchone()
+            print(rows)
+        except sqlite3.Error as e:
+            print("Error executing SQL query:", e)
+            
+    with sqlite3.connect('c_inventory.db') as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM c_inventory WHERE user_id = ? and slot = ?", (member.id, slot))
+        existing_row = c.fetchone()
+        if(existing_row):
+            if rows[8] < existing_row[3] + 1:
+                await ctx.send("Cannot exceed slot limit!")
+                return
+            else:
+                c.execute("UPDATE c_inventory SET PID = ?, current_stack = ? WHERE user_id = ? AND slot = ?", (PID, existing_row[3] + 1, member.id, slot))
+                conn.commit()
+        else:
+            c.execute("INSERT INTO c_inventory (user_id, PID, current_stack, slot) VALUES (?, ?, ?, ?)", (member.id, PID, 1, slot,))
+            conn.commit()
+
+
+
+
+
 
 @bot.command()
 @commands.is_owner()
@@ -162,7 +186,7 @@ async def region(ctx, new_region: str):
 
     if new_region.lower() not in ["ocean", "forest", "swamp", "mountain"]:
         await ctx.send("invalid region")
-        raise commands.CommandError("invalid region!")
+        raise commands.CommandError("invalid region!: regions are swamp, ocean, forest, mountain")
 
     game.Character.changeRegion(new_region.lower(), user_id)  
     await ctx.send("Region changed to " + new_region.lower() + "!")
@@ -182,7 +206,7 @@ async def hunt(ctx):
                 return
 
     if game.Character.getRegion(user_id) is None:
-        await ctx.send("Enter a region!")
+        await ctx.send("Enter a region!: swamp, mountain, forest, ocean")
         raise commands.CommandError("Invalid region")
 
     if game.Character.getMode(user_id).lower() != "adventure":
@@ -293,6 +317,7 @@ async def create(ctx, chtype: str = None, name: str = None):
 
     if result is None:
         Inventory.create_inventory(user_id)
+        Potions.create_c_inventory(user_id)
         new_character = game.Character(name=name, HP=100, max_HP=100, XP=0, defense=0, attack=0, gold=10, inventory= user_id, w = Wchoice(chtype, user_id), armor = None, accessory = None, ctype=chtype, battling=False, mode="AT HOME", region=None,  level=1, user_id=user_id)
         cursor.execute('INSERT INTO characters (name, HP, max_HP, XP, defense, attack, gold, inventory, w, armor, accessory, ctype, battling, mode, region, level, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (new_character.name, new_character.HP, new_character.max_HP, new_character.XP, new_character.defense, new_character.attack, int(new_character.gold), new_character.inventory, new_character.w, new_character.armor, new_character.accessory, new_character.ctype, new_character.battling, new_character.mode, new_character.region, new_character.level, new_character.user_id))
         conn.commit()
@@ -506,11 +531,6 @@ def update_player_stats(item_id, user_id, swap):
     if(subtract == None):
         sub_values = (0, 0)
 
-    print(subtract)
-    print(item_stats[0])
-    print(player_stats[0])
-    print(sub_values[0])
-
     new_att = item_stats[0] + player_stats[0] - sub_values[0] #sub_values[0] is the current slot being swapped out, item_stats[0] is the item being insertedm player[0] is base stats
     new_def = item_stats[1] + player_stats[1] - sub_values[1]
 
@@ -551,13 +571,13 @@ async def restart(ctx):
     await ctx.send("Restarting the bot!")
     await bot.close()
 
-
 async def load_extensions():
     #await bot.load_extension("jishaku")
     await bot.load_extension("game")
     await bot.load_extension("databasecode")
     await bot.load_extension("Battle")
     await bot.load_extension("Inventory")
+    await bot.load_extension("Potions")
 
 
 async def main():

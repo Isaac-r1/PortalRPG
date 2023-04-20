@@ -24,7 +24,7 @@ class AttackButton(Button):
         async def callback(self, interaction: discord.Interaction):
             if interaction.user.id == self.user_id:
                 await interaction.response.defer()
-                return await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message)
+                return await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message, interaction)
                 
 
                 
@@ -49,7 +49,7 @@ class FleeButton(Button):
 
 class Battle(commands.Cog):
     
-    async def turn(ctx, user_id, creature, rarity, item, message):
+    async def turn(ctx, user_id, creature, rarity, item, message, interaction):
         conn = connections.conn
         cursor = conn.cursor()
 
@@ -94,6 +94,7 @@ class Battle(commands.Cog):
                     cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
                     conn.commit()
                     await ctx.send("You win!")
+                    await interaction.message.delete()
                 return
             php = player[2]
 
@@ -121,6 +122,7 @@ class Battle(commands.Cog):
                     await ctx.send("You died!")
                     cursor.execute('UPDATE characters SET HP = ? WHERE user_id = ?', (player[3], user_id))
                     conn.commit()
+                    await interaction.message.delete()
                 return
         
 
