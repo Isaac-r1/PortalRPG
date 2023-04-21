@@ -10,7 +10,20 @@ from discord.ext import commands
 from discord.ext.commands import bot
 from discord.ext.commands.core import command
 from PythonFiles.databasecode import databasecode
+from discord.ui import Button
+from discord import ButtonStyle
 
+class GenericPotion(Button):
+    def __init__(self, user_id, name):
+        super().__init__(style=ButtonStyle.blurple, label=name)
+        self.user_id = user_id
+        self.name = name
+    
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id == self.user_id:
+            await interaction.response.send_message("You consumed " + self.name + "!")
+            await interaction.message.delete()
+            
 class Potions(commands.Cog):
 
     def create_c_inventory(user_id):

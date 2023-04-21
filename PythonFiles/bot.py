@@ -94,10 +94,9 @@ async def c_insert(ctx, member: discord.Member, PID: int, slot: int):
             c1 = conn1.cursor()
             c1.execute("SELECT * FROM consumables WHERE PID = ?", (PID,))
             rows = c1.fetchone()
-            print(rows)
         except sqlite3.Error as e:
             print("Error executing SQL query:", e)
-            
+
     with sqlite3.connect('c_inventory.db') as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM c_inventory WHERE user_id = ? and slot = ?", (member.id, slot))

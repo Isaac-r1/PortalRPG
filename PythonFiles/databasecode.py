@@ -183,25 +183,26 @@ class databasecode(commands.Cog):
         if c.fetchone() is None:
             c.execute('''CREATE TABLE consumables(
                 PID INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
+                name TEXT UNIQUE,
                 healing INTEGER,
                 damage INTEGER,
                 dodge INTEGER,
                 attB INTEGER,
                 defB INTEGER,
                 gold INTEGER,
-                stack INTEGER
+                stack INTEGER,
+                combat TEXT
             )''')
         
         with open('CSV & TXT Files/Potions.csv', newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             next(reader) # skip header row
             for row in reader:
-                c.execute("SELECT * FROM consumables WHERE PID = ? AND name = ?", (row[0], row[1]))
-                existing_row = c.fetchone()
-                if not existing_row:
-                    c.execute("INSERT INTO consumables (name, healing, damage, dodge, attB, defB, gold, stack) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
-        
+                try:
+                    c.execute("INSERT INTO consumables (name, healing, damage, dodge, attB, defB, gold, stack, combat) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (*row,))
+                except sqlite3.IntegrityError:
+                    # Ignore any duplicate rows
+                    pass
 
 async def setup(bot):
     await bot.add_cog(databasecode())

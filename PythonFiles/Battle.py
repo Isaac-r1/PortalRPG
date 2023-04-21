@@ -7,6 +7,7 @@ from discord.ui import Button
 from discord import ButtonStyle
 from math import sqrt
 from math import floor
+from PythonFiles.Potions import GenericPotion
 from PythonFiles.connections import connections
 from PythonFiles.game import game
 from PythonFiles.databasecode import databasecode 
@@ -26,9 +27,6 @@ class AttackButton(Button):
                 await interaction.response.defer()
                 return await Battle.turn(self.ctx, self.user_id, self.creature, self.rarity, self.item, self.message, interaction)
                 
-
-                
-
 class FleeButton(Button):
     def __init__(self, user_id):
         super().__init__(style=ButtonStyle.red, label="Flee")
@@ -45,6 +43,25 @@ class FleeButton(Button):
                 conn.commit()
             await interaction.response.send_message("You fled the encounter!")
             await interaction.message.delete()
+
+class ConsumeButton(Button):
+    def __init__(self, user_id):
+        super().__init__(style=ButtonStyle.blurple, label="Consume")
+        self.user_id = user_id
+    
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id == self.user_id:
+            conn = sqlite3.connect('consumables.db')
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM consumables')
+            potions = cursor.fetchall()
+            view = discord.ui.View()
+            for potion in potions:
+                if potion[9] == "T":  # Check if the potion can be used in combat
+                    button = GenericPotion(self.user_id, potion[1])
+                    view.add_item(button)
+            await interaction.response.send_message("Please click an available conusmable!", view=view)
+
             
 
 class Battle(commands.Cog):
@@ -142,9 +159,12 @@ class Battle(commands.Cog):
 
         attack_button = AttackButton(ctx, user_id, creature, rarity, item, message)
         flee_button = FleeButton(user_id)
+        consume_button = ConsumeButton(user_id)
         view = discord.ui.View()
         view.add_item(attack_button)
         view.add_item(flee_button)
+        view.add_item(consume_button)
+        
         await ctx.send("Do you plan to attack or flee?", view=view)
                 
 
